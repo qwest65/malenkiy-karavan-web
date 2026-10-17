@@ -1,0 +1,16 @@
+{
+  "name": "Маленький караван",
+  "short_name": "Караван",
+  "description": "Прогулка по Троицку с верблюжонком Трошей для детей 4–7 лет с родителями.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6ebd6",
+  "theme_color": "#f6ebd6",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
