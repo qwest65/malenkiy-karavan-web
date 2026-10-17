@@ -3,8 +3,9 @@
  * сохраняется в телефоне. Кусочки карты запоминаются по мере просмотра.
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v1';
-const APP_CACHE = `karavan-app-${VERSION}`;
+const VERSION = 'v2';
+// Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
+const APP_CACHE = `karavan-web-${VERSION}`;
 const MAP_CACHE = 'karavan-map';
 const SHELL = [
   './', 'index.html', 'app.js', 'style.css', 'manifest.webmanifest',
@@ -46,7 +47,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
-      if (key.startsWith('karavan-app-') && key !== APP_CACHE) await caches.delete(key);
+      if (key.startsWith('karavan-web-') && key !== APP_CACHE) await caches.delete(key);
     }
     await self.clients.claim();
   })());
