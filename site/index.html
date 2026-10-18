@@ -147,6 +147,17 @@
     .download svg { width: 34px; height: 34px; fill: #fff; }
     .download-note { margin-top: 18px; font-weight: 600; color: var(--brown); font-size: 0.95rem; line-height: 1.5; }
     .download-note a { color: inherit; }
+    /* QR-код на прогулку — только на компьютере: телефоном свой же экран не отсканировать. */
+    .qr-card {
+      display: none; align-items: center; gap: 16px; margin-top: 22px; padding: 12px 18px 12px 12px;
+      background: #fff; border-radius: 22px; box-shadow: var(--shadow); text-decoration: none;
+      color: var(--brown); font-weight: 700; font-size: 1rem; line-height: 1.35; text-align: left;
+      max-width: 420px; transition: transform .15s;
+    }
+    .qr-card:hover { transform: translateY(-2px); }
+    .qr-card img { width: 112px; height: 112px; flex: none; }
+    .qr-card small { display: block; margin-top: 4px; font-weight: 600; opacity: .75; }
+    @media (hover: hover) and (pointer: fine) and (min-width: 820px) { .qr-card { display: inline-flex; } }
 
     .bubble-side { display: flex; flex-direction: column; gap: 26px; align-items: center; }
     .bubble {
@@ -415,6 +426,10 @@
       </div>
       <div class="download-note">Прямо в браузере телефона — iPhone и Android, без установки · бесплатно · без рекламы<br>
         Для Android есть и приложение: <a href="https://github.com/qwest65/malenkiy-karavan/releases/latest/download/MalenkiyKaravan.apk">скачать APK</a></div>
+      <a class="qr-card" href="../" title="Открыть прогулку">
+        <img src="../images/qr.png" alt="QR-код: прогулка «Маленький караван»">
+        <span>📱 Открыли на компьютере? Наведите камеру телефона — прогулка откроется сразу.<small>Или нажмите сюда, чтобы открыть здесь.</small></span>
+      </a>
     </div>
 
     <div class="bubble-side">
