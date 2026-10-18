@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.8';
+const APP_VERSION = '1.9';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1420,7 +1420,7 @@ function pickPhoto(stop, camera) {
 const photosMissing = () => S.journey.found.filter(i => !Photos.has.has(i)).length;
 const findsWord = n => (n % 10 === 1 && n % 100 !== 11 ? 'находке' : 'находкам');
 
-/** Коллаж «Мои находки с Трошей» — тот же макет, что Collage.kt в Android. */
+/** Коллаж «Мои находки с Трошей» на листе A4 — тот же макет, что Collage.kt в Android. */
 async function refreshCollage() {
   const j = S.journey;
   const found = route.default_order.filter(i => j.found.includes(i))
@@ -1438,11 +1438,35 @@ async function refreshCollage() {
   }
 }
 
+/**
+ * Раскладка коллажа на листе A4: из 1–4 столбцов берём ту, где фото крупнее всего
+ * (а из почти равных — с большим числом рядов).
+ * Тот же расчёт — в Collage.kt Android-приложения.
+ */
+const COLLAGE = { W: 1654, H: 2339, MARGIN: 70, HEADER: 300, FOOTER: 340, GAP: 40, PAD: 22 };
+const captionSize = photo => Math.max(28, Math.min(54, Math.round(photo * 0.08)));
+const captionHeight = photo => Math.round(captionSize(photo) * 2.7);
+
+function collageLayout(n) {
+  const { W, H, MARGIN, HEADER, FOOTER, GAP, PAD } = COLLAGE;
+  const gw = W - 2 * MARGIN, gh = H - HEADER - FOOTER;
+  const options = [];
+  for (let cols = 1; cols <= Math.min(4, n); cols++) {
+    const rows = Math.ceil(n / cols);
+    const cellW = (gw - (cols - 1) * GAP) / cols, cellH = (gh - (rows - 1) * GAP) / rows;
+    let photo = Math.floor(Math.min(cellW, cellH) - 2 * PAD);
+    while (photo > 0 && photo + 2 * PAD + captionHeight(photo) > cellH) photo -= 2;
+    options.push({ cols, rows, cellW, cellH, photo });
+  }
+  // Почти такие же крупные фото, но больше рядов — лист заполнен, а не пустой сверху и снизу.
+  const top = Math.max(...options.map(o => o.photo));
+  return options.filter(o => o.photo >= top * 0.9).sort((a, b) => b.rows - a.rows || b.photo - a.photo)[0];
+}
+
 async function renderCollage(found, badge) {
-  const W = 1080, MARGIN = 40, GAP = 40, HEADER = 250, CARD_W = (W - 2 * MARGIN - GAP) / 2;
-  const PHOTO = CARD_W - 40, CARD_H = PHOTO + 150, FOOTER = 320;
-  const rows = Math.ceil(found.length / 2);
-  const H = HEADER + rows * (CARD_H + GAP) + FOOTER;
+  const { W, H, MARGIN, HEADER, FOOTER, GAP, PAD } = COLLAGE;
+  const L = collageLayout(found.length);
+  const PHOTO = L.photo, CARD_W = PHOTO + 2 * PAD, CARD_H = PHOTO + 2 * PAD + captionHeight(PHOTO);
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d');
@@ -1450,10 +1474,10 @@ async function renderCollage(found, badge) {
   g.fillStyle = '#e8d3b0';
   g.fillRect(0, 0, W, H);
   g.textAlign = 'center';
-  g.fillStyle = '#d2463c'; g.font = font(76, true);
-  g.fillText('Маленький караван', W / 2, 120);
-  g.fillStyle = '#3b2415'; g.font = font(40);
-  g.fillText(`Мои находки с Трошей · ${found.length} ${placesWord(found.length)}`, W / 2, 190);
+  g.fillStyle = '#d2463c'; g.font = font(104, true);
+  g.fillText('Маленький караван', W / 2, 150);
+  g.fillStyle = '#3b2415'; g.font = font(54);
+  g.fillText(`Мои находки с Трошей · ${found.length} ${placesWord(found.length)}`, W / 2, 238);
 
   const fit = (img, x, y, w, h) => {
     const k = Math.min(w / img.naturalWidth, h / img.naturalHeight);
@@ -1469,8 +1493,12 @@ async function renderCollage(found, badge) {
   for (let k = 0; k < found.length; k++) {
     const i = found[k];
     const stop = route.stops[i];
-    const left = MARGIN + (k % 2) * (CARD_W + GAP);
-    const top = HEADER + Math.floor(k / 2) * (CARD_H + GAP);
+    const row = Math.floor(k / L.cols), col = k % L.cols;
+    // Неполный последний ряд — по центру.
+    const inRow = Math.min(L.cols, found.length - row * L.cols);
+    const rowLeft = MARGIN + (L.cols - inRow) * (L.cellW + GAP) / 2;
+    const left = rowLeft + col * (L.cellW + GAP) + (L.cellW - CARD_W) / 2;
+    const top = HEADER + row * (L.cellH + GAP) + (L.cellH - CARD_H) / 2;
     const [photo, st] = await Promise.all([loadImage(Photos.url(i)), loadImage(`stickers/${stop.sticker}.webp`).catch(() => null)]);
     g.save();
     // Карточки чуть наклонены в разные стороны — как фото, приклеенные в альбом.
@@ -1480,26 +1508,29 @@ async function renderCollage(found, badge) {
     g.fillStyle = 'rgba(60,30,10,0.24)'; round(left + 6, top + 10, CARD_W, CARD_H, 18); g.fill();
     g.fillStyle = '#fff'; round(left, top, CARD_W, CARD_H, 18); g.fill();
     const side = Math.min(photo.naturalWidth, photo.naturalHeight);
-    g.drawImage(photo, (photo.naturalWidth - side) / 2, (photo.naturalHeight - side) / 2, side, side, left + 20, top + 20, PHOTO, PHOTO);
-    g.fillStyle = '#3b2415'; g.font = font(34, true);
-    wrapText(g, stop.title, left + CARD_W / 2, top + 20 + PHOTO + 56, PHOTO, 42, 2);
-    if (st) fit(st, left + CARD_W - 130, top - 30, 150, 150);
+    g.drawImage(photo, (photo.naturalWidth - side) / 2, (photo.naturalHeight - side) / 2, side, side, left + PAD, top + PAD, PHOTO, PHOTO);
+    const fs = captionSize(PHOTO);
+    g.fillStyle = '#3b2415'; g.font = font(fs, true);
+    wrapText(g, stop.title, left + CARD_W / 2, top + PAD + PHOTO + fs * 1.35, PHOTO, Math.round(fs * 1.2), 2);
+    const ss = Math.round(CARD_W * 0.32);
+    if (st) fit(st, left + CARD_W - ss * 0.85, top - ss * 0.2, ss, ss);
     g.restore();
   }
 
-  const footTop = HEADER + rows * (CARD_H + GAP);
+  const footTop = H - FOOTER;
+  const art = FOOTER - 40;
   const trosha = await loadImage('stickers/trosha.webp').catch(() => null);
-  if (trosha) fit(trosha, MARGIN, footTop + 20, 280, 270);
+  if (trosha) fit(trosha, MARGIN, footTop + 20, art, art);
   if (badge) {
     const b = await loadImage(`stickers/${route.badge}.webp`).catch(() => null);
-    if (b) fit(b, W - MARGIN - 270, footTop + 20, 270, 270);
-    g.fillStyle = '#d2463c'; g.font = font(44, true);
-    g.fillText('Юный караванщик!', W / 2, footTop + 170);
+    if (b) fit(b, W - MARGIN - art, footTop + 20, art, art);
+    g.fillStyle = '#d2463c'; g.font = font(60, true);
+    g.fillText('Юный караванщик!', W / 2, footTop + FOOTER / 2 + 20);
   } else {
-    g.fillStyle = '#7a6150'; g.font = font(40);
-    g.fillText('Продолжение следует…', W / 2, footTop + 170);
+    g.fillStyle = '#7a6150'; g.font = font(54);
+    g.fillText('Продолжение следует…', W / 2, footTop + FOOTER / 2 + 20);
   }
-  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
 }
 
 function wrapText(g, text, cx, y, maxW, lineH, maxLines) {
