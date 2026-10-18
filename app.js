@@ -1056,6 +1056,8 @@ function follow() {
 /* ================= Действия ================= */
 
 function go(screen) {
+  // На прогулку — с развёрнутой панелью: видно, куда идём, а через 5 секунд она свернётся сама.
+  if (screen === 'walk' && S.screen !== 'walk') S.panelOpen = true;
   S.screen = screen;
   if (screen !== 'home' && history.state?.inner !== true) history.pushState({ inner: true }, '');
   render();
@@ -1853,8 +1855,26 @@ function albumScreen() {
   </div>`;
 }
 
+/** Нижняя панель прогулки сворачивается сама, если её не трогать: карте нужно больше места. */
+const PANEL_HIDE_MS = 5000;
+let panelTimer = null;
+
+function schedulePanelHide() {
+  clearTimeout(panelTimer);
+  panelTimer = setTimeout(() => {
+    panelTimer = null;
+    if (S.screen === 'walk' && S.panelOpen) { S.panelOpen = false; render(); }
+  }, PANEL_HIDE_MS);
+}
+
 function render() {
   const walking = S.screen === 'walk';
+  if (walking && S.panelOpen) {
+    if (!panelTimer) schedulePanelHide();
+  } else {
+    clearTimeout(panelTimer);
+    panelTimer = null;
+  }
   document.body.classList.toggle('walking', walking);
   $mapScreen.hidden = !walking;
   keepAwake(walking);
@@ -1878,6 +1898,7 @@ function render() {
 $app.addEventListener('click', e => {
   const b = e.target.closest('[data-act]');
   if (!b || b.disabled) return;
+  if (S.panelOpen && b.closest('#walk-panel')) schedulePanelHide();
   const d = b.dataset;
   const ed = S.editing;
   switch (d.act) {
@@ -1921,7 +1942,9 @@ $app.addEventListener('click', e => {
 /** Свайп по нижней панели прогулки: вниз — свернуть, вверх — развернуть. */
 let swipeY = null;
 $app.addEventListener('touchstart', e => {
-  if (e.target.closest('#walk-panel')) swipeY = e.touches[0].clientY;
+  if (!e.target.closest('#walk-panel')) return;
+  swipeY = e.touches[0].clientY;
+  if (S.panelOpen) schedulePanelHide();
 }, { passive: true });
 $app.addEventListener('touchend', e => {
   if (swipeY == null) return;
