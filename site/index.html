@@ -48,16 +48,17 @@
     .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
 
     /* ---------- Навигация ---------- */
-    .nav { position: sticky; top: 12px; z-index: 30; max-width: 1240px; margin: 12px auto 0; padding: 0 16px; }
+    /* Шапка тонкая: прилипает к верху только на широком экране, на телефоне уезжает при прокрутке. */
+    .nav { position: sticky; top: 8px; z-index: 30; max-width: 1240px; margin: 8px auto 0; padding: 0 16px; }
     .nav-inner {
-      display: flex; align-items: center; gap: 18px;
-      background: rgba(255,255,255,0.96);
-      border-radius: 999px; padding: 8px 10px 8px 18px;
-      box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.94);
+      border-radius: 999px; padding: 4px 8px 4px 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.10);
     }
-    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.25rem; color: var(--brown); white-space: nowrap; }
-    .brand { margin-right: 12px; }
-    .brand img { width: 44px; height: 44px; border-radius: 11px; }
+    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 1.02rem; color: var(--brown); white-space: nowrap; }
+    .brand { margin-right: 8px; }
+    .brand img { width: 32px; height: 32px; border-radius: 9px; }
     .listen {
       display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font: inherit;
       background: #fff; color: var(--orange-dark); font-weight: 800; font-size: 1.05rem;
@@ -70,12 +71,10 @@
     .menu { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-wrap: nowrap; justify-content: flex-end; }
     .menu a {
       text-decoration: none; font-weight: 600; font-size: 0.92rem; color: var(--ink); white-space: nowrap;
-      padding: 10px 10px; border-radius: 999px; display: flex; gap: 6px; align-items: center;
+      padding: 6px 9px; border-radius: 999px; display: flex; gap: 6px; align-items: center;
     }
     .menu a:hover { background: #fff1e6; color: var(--orange-dark); }
     .menu a.active { color: var(--orange-dark); box-shadow: inset 0 -3px 0 var(--orange); border-radius: 12px; }
-    .menu a.cta { background: var(--orange); color: #fff; padding: 12px 18px; margin-left: 6px; }
-    .menu a.cta:hover { background: var(--orange-dark); color: #fff; }
 
     /* ---------- Первый экран ---------- */
     .hero {
@@ -364,6 +363,7 @@
       .route::before { display: none; }
     }
     @media (max-width: 1360px) { .menu a .t { display: none; } }
+    @media (max-width: 900px), (max-height: 500px) { .nav { position: relative; } }
     @media (max-width: 900px) {
       .hero-grid { grid-template-columns: 1fr; text-align: center; }
       .scene { min-height: 0; order: 2; }
@@ -375,11 +375,9 @@
       .team { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
-      .nav { top: 8px; }
-      .nav-inner { border-radius: 26px; flex-wrap: wrap; justify-content: center; padding: 10px; gap: 6px; }
+      .nav-inner { border-radius: 22px; flex-wrap: wrap; justify-content: center; padding: 6px 8px; gap: 2px; }
       .menu { margin: 0; justify-content: center; flex-wrap: wrap; }
-      .menu a { padding: 8px 10px; font-size: 0.9rem; }
-      .menu a.cta { padding: 8px 14px; font-size: 0.85rem; }
+      .menu a { padding: 6px 9px; font-size: 0.9rem; }
       .hero { margin-top: -130px; padding-top: 170px; }
       .features-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .route { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -404,7 +402,6 @@
       <a href="#parents">👨‍👩‍👧 <span class="t">Для родителей</span></a>
       <a href="#teachers">🏫 <span class="t">Педагогам</span></a>
       <a href="#faq">❓ <span class="t">Вопросы</span></a>
-      <a class="cta" href="../">Начать прогулку</a>
     </nav>
   </div>
 </div>
@@ -420,7 +417,7 @@
       <h1 class="title">Маленький<span>караван</span></h1>
       <div class="subtitle">Интерактивная прогулка по Троицку<br>для детей 4–7 лет с родителями</div>
       <div>
-        <a class="download" href="../">🐫 Пройти прогулку</a>
+        <a class="download" href="../">🐫 Начать прогулку</a>
       </div>
       <div class="download-note">Прямо в браузере телефона — iPhone и Android, без установки · бесплатно · без рекламы<br>
         Для Android есть и приложение: <a href="https://github.com/qwest65/malenkiy-karavan/releases/latest/download/MalenkiyKaravan.apk">скачать APK</a></div>
