@@ -1,0 +1,120 @@
+name: Voice
+
+# Озвучка прогулки. Запуск вручную: Actions → Voice → Run workflow.
+#
+# yandex-narrator — переозвучить рассказчика (рассказы, вопросы, справки для взрослых) голосом
+#   Яндекс SpeechKit. Фразы Троши (ElevenLabs) не трогаются. Нужен секрет YANDEX_SPEECHKIT_KEY —
+#   API-ключ сервисного аккаунта Яндекс Облака с ролью ai.speechkit-tts.user
+#   (Settings → Secrets and variables → Actions → New repository secret).
+# yandex-samples — образцы голосов Яндекса (заодно проверка ключа).
+# samples — образцы бесплатных голосов Microsoft Edge.
+# all — переозвучить всё голосами Edge, включая Трошу (заменит голос ElevenLabs).
+#
+# Образцы складываются в артефакт запуска (внизу страницы запуска → Artifacts).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Что сделать"
+        type: choice
+        options: ["yandex-narrator", "yandex-samples", "samples", "all"]
+        default: "yandex-narrator"
+      yandex_voice:
+        description: "Голос рассказчика Яндекса"
+        type: choice
+        options: ["ermil", "alexander", "kirill", "anton", "filipp", "zahar"]
+        default: "ermil"
+      narrator:
+        description: "all: голос рассказчика Edge"
+        type: choice
+        options: ["ru-RU-DmitryNeural", "ru-RU-SvetlanaNeural"]
+        default: "ru-RU-DmitryNeural"
+      trosha:
+        description: "all: голос Троши Edge"
+        type: choice
+        options: ["ru-RU-SvetlanaNeural", "ru-RU-DmitryNeural"]
+        default: "ru-RU-SvetlanaNeural"
+      trosha_pitch:
+        description: "all: тон Троши (выше — звучит моложе)"
+        type: choice
+        options: ["+25Hz", "+0Hz", "+15Hz", "+35Hz", "+45Hz"]
+        default: "+25Hz"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voice-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install edge-tts soundfile numpy requests lameenc
+
+      - name: Check Yandex key
+        if: startsWith(inputs.mode, 'yandex')
+        env:
+          YANDEX_SPEECHKIT_KEY: ${{ secrets.YANDEX_SPEECHKIT_KEY }}
+        run: |
+          if [ -z "$YANDEX_SPEECHKIT_KEY" ]; then
+            echo "::error::Секрет YANDEX_SPEECHKIT_KEY не задан: Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Yandex voice samples
+        if: inputs.mode == 'yandex-samples'
+        env:
+          YANDEX_SPEECHKIT_KEY: ${{ secrets.YANDEX_SPEECHKIT_KEY }}
+        run: python3 tools/generate_audio.py --yandex-samples samples
+
+      - name: Edge voice samples
+        if: inputs.mode == 'samples'
+        run: python3 tools/generate_audio.py --engine edge --samples samples
+
+      - uses: actions/upload-artifact@v4
+        if: endsWith(inputs.mode, 'samples')
+        with:
+          name: voice-samples
+          path: samples/
+
+      - name: Voice the narrator with Yandex
+        if: inputs.mode == 'yandex-narrator'
+        env:
+          YANDEX_SPEECHKIT_KEY: ${{ secrets.YANDEX_SPEECHKIT_KEY }}
+          VOICE: ${{ inputs.yandex_voice }}
+        run: python3 tools/generate_audio.py --yandex-narrator "$VOICE" --yandex-role neutral
+
+      - name: Voice everything with Edge
+        if: inputs.mode == 'all'
+        env:
+          NARRATOR: ${{ inputs.narrator }}
+          TROSHA: ${{ inputs.trosha }}
+          PITCH: ${{ inputs.trosha_pitch }}
+        run: python3 tools/generate_audio.py --engine edge --narrator "$NARRATOR" --trosha "$TROSHA" --trosha-pitch="$PITCH"
+
+      - name: Commit voice-over
+        if: inputs.mode == 'yandex-narrator' || inputs.mode == 'all'
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          git add audio data/files.json
+          if git diff --cached --quiet; then
+            echo "Озвучка не изменилась."
+            exit 0
+          fi
+          # Новая версия кэша — чтобы телефоны забрали новую озвучку.
+          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" sw.js)
+          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" sw.js
+          git add sw.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Voice-over: $MODE"
+          git push
