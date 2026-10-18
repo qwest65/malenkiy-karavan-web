@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -1552,11 +1552,13 @@ function geoBrowserHelp() {
   if (standalone || S.fix) return '';
   const failed = GEO.status === 'denied' || GEO.status === 'unsupported' || Date.now() - GEO.since > 45000;
   if (!failed) return '';
+  // На Android ссылка intent:// открывает браузер по умолчанию (Chrome, Яндекс…), поэтому без названия.
   const where = isIOS ? 'Safari' : 'браузере';
+  const menu = isIOS ? '⋯ или ☰' : '⋮ или ☰';
   return `<div class="hint geo-help" style="background:#fff1c9;color:#7a4b00">
-    Здесь телефон не даёт Троше узнать, где вы. Открыли из мессенджера — откройте прогулку в ${where}:
-    <a href="${browserLink()}" style="color:inherit;font-weight:700">Открыть в ${where}</a>
-    <div style="font-size:13px;margin-top:4px">Не открылось? В меню ⋯ или ☰ мессенджера выберите «Открыть в ${where}».</div></div>`;
+    Здесь телефон не даёт Троше узнать, где вы. Открыли из мессенджера — откройте прогулку в ${where}.
+    <a class="btn" href="${browserLink()}" style="display:grid;place-items:center;text-decoration:none;min-height:52px;font-size:18px;margin-top:8px">${isIOS ? '🧭' : '🌐'} Открыть в ${where}</a>
+    <div style="font-size:13px;margin-top:6px">Не открылось? В меню ${menu} мессенджера выберите «Открыть в ${where}».</div></div>`;
 }
 
 function installHint() {
