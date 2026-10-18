@@ -232,3 +232,5 @@ body.walking #app > * { pointer-events: auto; }
 .offline-bar .track { height: 6px; border-radius: 3px; background: rgba(122,97,80,0.18); margin-top: 6px; overflow: hidden; }
 .offline-bar .track div { height: 100%; background: var(--red); transition: width .3s; }
 .offline-bar.done { color: #2e7d32; font-weight: 700; }
+.quiet-hint { background: transparent; border: 1px dashed rgba(122,97,80,0.35); color: var(--muted); font-size: 13px; padding: 10px 34px 10px 14px; }
+.quiet-hint .x { color: var(--muted); font-size: 16px; }

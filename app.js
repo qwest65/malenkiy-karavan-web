@@ -6,9 +6,10 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.7';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
+const OPENS_KEY = 'karavan.opens';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 /** Радиус прибытия по умолчанию, м. */
@@ -1575,8 +1576,14 @@ function installHint() {
   let hidden = false;
   try { hidden = localStorage.getItem(HINT_KEY) === 'hidden'; } catch (_) { /* нет хранилища */ }
   if (standalone || hidden) return '';
-  // На iPhone иконку на экран «Домой» не предлагаем: iOS не даёт ей геопозицию.
-  if (isIOS) return '';
+  // На iPhone — тихая строчка внизу и только со второго открытия: кнопки установки iOS не даёт.
+  if (isIOS) {
+    let opens = 0;
+    try { opens = +localStorage.getItem(OPENS_KEY) || 0; } catch (_) { /* нет хранилища */ }
+    if (opens < 2) return '';
+    return `<div class="hint quiet-hint"><button class="x" data-act="hideHint" aria-label="Скрыть">✕</button>
+      📲 Прогулку можно поставить на экран «Домой»: в Safari «Поделиться» → «На экран „Домой“».</div>`;
+  }
   if (installEvent) {
     return `<div class="hint"><button class="x" data-act="hideHint" aria-label="Скрыть">✕</button>
       <b>Установите приложение</b> — оно будет открываться с экрана телефона, даже без интернета.
@@ -2020,6 +2027,7 @@ async function boot() {
     }
   }
   S.journey = loadJourney();
+  try { localStorage.setItem(OPENS_KEY, String((+localStorage.getItem(OPENS_KEY) || 0) + 1)); } catch (_) { /* нет хранилища */ }
   await Photos.load();
   history.replaceState({ inner: false }, '');
   render();
