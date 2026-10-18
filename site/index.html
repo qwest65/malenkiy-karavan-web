@@ -216,6 +216,8 @@
 
     /* ---------- Карточки ---------- */
     .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .cards.two { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 640px) { .cards.two { grid-template-columns: 1fr; } }
     .card { border-radius: 26px; padding: 24px; font-size: 1.02rem; line-height: 1.55; }
     .card h3 { margin: 0 0 10px; font-weight: 800; font-size: 1.3rem; }
     .card p { margin: 0; }
@@ -613,7 +615,7 @@
       <img class="peek r" src="../stickers/book.webp" alt="" aria-hidden="true">
       <h2><span>🏫</span>Педагогам</h2>
       <p class="lead">Готовая форма краеведческой работы с дошкольниками</p>
-      <div class="cards">
+      <div class="cards two">
         <div class="card k3">
           <h3>🧺 В детском саду</h3>
           <p>До прогулки — знакомство с Трошей и его историей. На прогулке — маршрутный лист с заданиями. После — выставка коллажей и разговор о родном городе.</p>
@@ -621,10 +623,6 @@
         <div class="card k1">
           <h3>🏡 Семейный квест выходного дня</h3>
           <p>Педагог предлагает семьям пройти маршрут в выходные, а в понедельник дети рассказывают, какие вещи Троши нашли и что узнали о Троицке.</p>
-        </div>
-        <div class="card k2">
-          <h3>📄 Материалы</h3>
-          <p>Технологическая карта занятия и маршрутный лист для печати. <a href="#contacts">Напишите нам</a> — пришлём бесплатно.</p>
         </div>
       </div>
     </div>
