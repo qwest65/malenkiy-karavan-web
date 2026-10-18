@@ -1,0 +1,46 @@
+name: Walking paths
+
+# Карта улиц центра без дворов и пешеходные линии прогулки строятся здесь: результат
+# коммитится в data/streets.json и data/paths.json, и прогулка работает с ними без интернета.
+# Картинка-проверка — tools/preview/route-preview.png.
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "data/route.json"
+      - "tools/build_streets.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paths-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  paths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build streets and walking paths
+        run: |
+          pip install --quiet matplotlib
+          python3 tools/build_streets.py
+
+      - name: Commit paths
+        run: |
+          git add data/paths.json data/streets.json tools/preview/route-preview.png
+          if git diff --cached --quiet; then
+            echo "Линии не изменились."
+            exit 0
+          fi
+          # Новая версия кэша — чтобы телефоны забрали новые линии.
+          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" sw.js)
+          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" sw.js
+          git add sw.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update streets and walking paths"
+          git push

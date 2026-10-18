@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ff6a1f">
+  <meta name="description" content="Маленький караван — интерактивная прогулка по Троицку для детей 4–7 лет с родителями. Помоги верблюжонку Троше найти пропавшие вещи!">
+  <title>Маленький караван — прогулка по Троицку для детей</title>
+  <link rel="icon" href="images/icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:title" content="Маленький караван — прогулка по Троицку для детей">
+  <meta property="og:description" content="Помоги верблюжонку Троше найти пропавшие вещи! Интерактивная прогулка для детей 4–7 лет с родителями.">
+  <meta property="og:url" content="https://qwest65.github.io/malenkiy-karavan-web/site/">
+  <meta property="og:image" content="https://qwest65.github.io/malenkiy-karavan-web/site/images/og.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="vk:image" content="https://qwest65.github.io/malenkiy-karavan-web/site/images/og.jpg">
+  <link rel="image_src" href="https://qwest65.github.io/malenkiy-karavan-web/site/images/og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --orange: #ff6a1f;
+      --orange-dark: #e2500c;
+      --brown: #5a2d14;
+      --green: #1f8a4c;
+      --green-dark: #146b39;
+      --cream: #fff7d6;
+      --ink: #3b2415;
+      --muted: #7a6150;
+      --shadow: 0 8px 24px rgba(90, 45, 20, 0.14);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Rubik", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: #f3fbe6;
+      overflow-x: hidden;
+    }
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+
+    /* ---------- Навигация ---------- */
+    .nav { position: sticky; top: 12px; z-index: 30; max-width: 1240px; margin: 12px auto 0; padding: 0 16px; }
+    .nav-inner {
+      display: flex; align-items: center; gap: 18px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 999px; padding: 8px 10px 8px 18px;
+      box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.25rem; color: var(--brown); white-space: nowrap; }
+    .brand { margin-right: 12px; }
+    .brand img { width: 44px; height: 44px; border-radius: 11px; }
+    .listen {
+      display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font: inherit;
+      background: #fff; color: var(--orange-dark); font-weight: 800; font-size: 1.05rem;
+      padding: 12px 22px; border-radius: 999px; border: 3px solid var(--orange);
+      box-shadow: 0 5px 0 #f3b78f; transform: rotate(-4deg); transition: transform .15s;
+    }
+    .listen:hover { transform: rotate(-4deg) translateY(-2px); }
+    .listen .ic { font-size: 1.4rem; line-height: 1; }
+    .listen.playing { background: var(--orange); color: #fff; }
+    .menu { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-wrap: nowrap; justify-content: flex-end; }
+    .menu a {
+      text-decoration: none; font-weight: 600; font-size: 0.92rem; color: var(--ink); white-space: nowrap;
+      padding: 10px 10px; border-radius: 999px; display: flex; gap: 6px; align-items: center;
+    }
+    .menu a:hover { background: #fff1e6; color: var(--orange-dark); }
+    .menu a.active { color: var(--orange-dark); box-shadow: inset 0 -3px 0 var(--orange); border-radius: 12px; }
+    .menu a.cta { background: var(--orange); color: #fff; padding: 12px 18px; margin-left: 6px; }
+    .menu a.cta:hover { background: var(--orange-dark); color: #fff; }
+
+    /* ---------- Первый экран ---------- */
+    .hero {
+      position: relative; margin-top: -64px; padding: 110px 0 120px;
+      background:
+        radial-gradient(ellipse 120px 40px at 18% 18%, #fff 60%, transparent 62%),
+        radial-gradient(ellipse 90px 30px at 23% 14%, #fff 60%, transparent 62%),
+        radial-gradient(ellipse 140px 44px at 72% 12%, #fff 60%, transparent 62%),
+        radial-gradient(ellipse 100px 34px at 78% 8%, #fff 60%, transparent 62%),
+        radial-gradient(circle at 92% 10%, #fff6a8 0 40px, rgba(255,246,168,0.35) 41px 70px, transparent 71px),
+        linear-gradient(180deg, #58c3f2 0%, #9fe0fa 55%, #d9f4c8 78%);
+      overflow: hidden;
+    }
+    .hero::after {
+      content: ""; position: absolute; left: -5%; right: -5%; bottom: -60px; height: 200px;
+      background: radial-gradient(ellipse at 50% 0%, #8fd35a 0 55%, #6cbf3f 56% 100%);
+      border-radius: 50% 50% 0 0;
+    }
+    .hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1.25fr 0.9fr; align-items: center; gap: 12px; }
+    .scene { position: relative; min-height: 360px; }
+    .sign { position: absolute; left: -10px; top: 0; transform: rotate(-8deg); z-index: 1; }
+    .sign .board {
+      background: linear-gradient(180deg, #b77942, #94592b);
+      border: 4px solid #6e3f1c; border-radius: 10px;
+      padding: 10px 22px; color: #3a1d0b; font-weight: 900; font-size: 1.9rem; letter-spacing: 1px;
+      box-shadow: 0 6px 0 #6e3f1c;
+    }
+    .sign .post { width: 18px; height: 120px; margin: -2px auto 0; background: linear-gradient(90deg, #8a5226, #6e3f1c); border-radius: 0 0 6px 6px; }
+    .trosha {
+      position: relative; z-index: 2; width: 88%; max-width: 400px; margin: 40px 0 0 70px;
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,0.18));
+      animation: bob 3.2s ease-in-out infinite;
+    }
+    @keyframes bob { 50% { transform: translateY(-8px) rotate(-1deg); } }
+    @media (prefers-reduced-motion: reduce) { .trosha { animation: none; } }
+
+    .trosha.logo {
+      width: 82%; max-width: 360px; aspect-ratio: 1; border-radius: 22%; border: 8px solid #fff;
+      box-shadow: 0 10px 0 rgba(90,45,20,0.18), 0 18px 30px rgba(0,0,0,0.18); filter: none;
+      margin: 70px 0 0 60px; rotate: -4deg;
+    }
+    @media (max-width: 900px) { .trosha.logo { margin: 10px auto 0; width: 64%; } }
+    .person .mail { margin-top: 10px; padding: 8px 14px; font-size: 0.95rem; }
+    .title-block { text-align: center; }
+    .title {
+      margin: 0; line-height: 0.95; font-weight: 900;
+      font-size: clamp(3rem, 7.2vw, 6.4rem);
+      color: var(--orange);
+      -webkit-text-stroke: 3px #fff; paint-order: stroke fill;
+      text-shadow: 0 6px 0 #c94a0e, 0 12px 18px rgba(0,0,0,0.18);
+      transform: rotate(-3deg);
+    }
+    .title span { display: block; color: var(--brown); text-shadow: 0 6px 0 #3a1d0b, 0 12px 18px rgba(0,0,0,0.18); }
+    .subtitle {
+      display: inline-block; margin: 22px 0 26px; padding: 12px 22px;
+      background: var(--cream); border-radius: 18px; transform: rotate(-2deg);
+      font-weight: 700; font-size: clamp(1.05rem, 1.9vw, 1.45rem); color: var(--brown);
+      box-shadow: var(--shadow);
+    }
+    .download {
+      display: inline-flex; align-items: center; gap: 14px; text-decoration: none;
+      background: linear-gradient(180deg, #ff7a2e, #f0540f); color: #fff;
+      font-weight: 800; font-size: clamp(1.15rem, 2vw, 1.6rem);
+      padding: 18px 34px; border-radius: 999px;
+      border: 4px solid #fff; box-shadow: 0 8px 0 #b8400a, 0 14px 24px rgba(0,0,0,0.2);
+      transition: transform .15s;
+    }
+    .download:hover { transform: translateY(-2px); }
+    .download svg { width: 34px; height: 34px; fill: #fff; }
+    .download-note { margin-top: 18px; font-weight: 600; color: var(--brown); font-size: 0.95rem; line-height: 1.5; }
+    .download-note a { color: inherit; }
+
+    .bubble-side { display: flex; flex-direction: column; gap: 26px; align-items: center; }
+    .bubble {
+      position: relative; background: #fff; border-radius: 40px; padding: 26px;
+      transform: rotate(-7deg); box-shadow: var(--shadow);
+      font-weight: 800; font-size: clamp(1rem, 1.6vw, 1.3rem); color: var(--brown); text-align: center; line-height: 1.35;
+    }
+    .bubble::after {
+      content: ""; position: absolute; left: 30px; bottom: -22px;
+      border: 14px solid transparent; border-top: 22px solid #fff; border-bottom: 0;
+      transform: rotate(18deg);
+    }
+    .bubble b { color: var(--orange-dark); }
+    .badge-img { width: 150px; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.18)); transform: rotate(6deg); }
+
+    /* ---------- Возможности ---------- */
+    .features { position: relative; z-index: 3; margin-top: -70px; }
+    .features-inner {
+      background: #fffdf3; border-radius: 30px; padding: 16px; box-shadow: var(--shadow);
+      display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px;
+    }
+    .feature { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 18px; font-weight: 700; font-size: 0.86rem; line-height: 1.2; min-width: 0; }
+    .feature .ico { flex: none; width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; font-size: 1.7rem; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+    .f1 { background: #e7f7e3; color: #1f6b33; }
+    .f2 { background: #e2f3fd; color: #1d5e8a; }
+    .f3 { background: #fff0dd; color: #8a4a12; }
+    .f4 { background: #fde6f1; color: #a0215c; }
+    .f5 { background: #ece6fd; color: #4d2fa0; }
+    .f6 { background: #fff3d6; color: #8a5a0e; }
+    .f7 { background: #e0f6f6; color: #1a6f73; }
+
+    /* ---------- Секции ---------- */
+    section { padding: 70px 0 20px; scroll-margin-top: 80px; }
+    .panel {
+      background: #fff; border-radius: 34px; padding: 30px 30px 36px; box-shadow: var(--shadow);
+      background-image: radial-gradient(circle at 100% 0%, #eaf7dc 0 120px, transparent 121px);
+    }
+    .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    h2 { margin: 0; font-weight: 900; font-size: clamp(1.6rem, 3.2vw, 2.4rem); color: var(--green-dark); display: flex; align-items: center; gap: 12px; }
+    .lead { margin: 4px 0 26px 4px; font-weight: 600; color: var(--green); font-size: 1.15rem; }
+    .btn-green {
+      display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+      background: var(--green); color: #fff; font-weight: 700; padding: 14px 24px; border-radius: 999px;
+      box-shadow: 0 5px 0 var(--green-dark);
+    }
+    .btn-green:hover { background: var(--green-dark); }
+
+    /* ---------- Маршрут ---------- */
+    .route { position: relative; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 14px; }
+    .route::before { content: ""; position: absolute; left: 5%; right: 5%; top: 62px; border-top: 5px dashed #9ad07a; z-index: 0; }
+    .stop { position: relative; z-index: 1; text-decoration: none; text-align: center; }
+    .circle {
+      position: relative; width: 124px; max-width: 100%; aspect-ratio: 1; margin: 0 auto;
+      border-radius: 50%; border: 6px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      display: grid; place-items: center; transition: transform .15s;
+    }
+    .stop:hover .circle { transform: translateY(-4px) rotate(-3deg); }
+    .circle img { width: 74%; height: 74%; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15)); }
+    .num {
+      position: absolute; left: -6px; top: -6px; width: 42px; height: 42px; border-radius: 50%;
+      display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 1.35rem;
+      border: 3px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    .stop-name { margin-top: 12px; font-weight: 700; font-size: 0.95rem; line-height: 1.25; }
+    .stop-item { font-size: 0.82rem; color: var(--muted); font-weight: 500; margin-top: 4px; }
+    .c1 .circle { background: #eef2f5; } .c1 .num { background: #ff6a1f; }
+    .c2 .circle { background: #e7f5ea; } .c2 .num { background: #f7b500; }
+    .c3 .circle { background: #fdf0e0; } .c3 .num { background: #3db34a; }
+    .c4 .circle { background: #fde8e3; } .c4 .num { background: #1e88e5; }
+    .c5 .circle { background: #fff4d8; } .c5 .num { background: #8e44ad; }
+    .c6 .circle { background: #e6effa; } .c6 .num { background: #ec407a; }
+    .c7 .circle { background: #eef0fd; } .c7 .num { background: #1aa39a; }
+    .c8 .circle { background: #f2ece4; } .c8 .num { background: #e53935; }
+    .c9 .circle { background: #e3f4fb; } .c9 .num { background: #1e6fd9; }
+    .route-facts { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .chip { background: #f3fbe6; border: 2px solid #cfe9b5; border-radius: 999px; padding: 10px 16px; font-weight: 700; color: var(--green-dark); }
+
+    /* ---------- Карточки ---------- */
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .card { border-radius: 26px; padding: 24px; font-size: 1.02rem; line-height: 1.55; }
+    .card h3 { margin: 0 0 10px; font-weight: 800; font-size: 1.3rem; }
+    .card p { margin: 0; }
+    .card ul { margin: 0; padding-left: 20px; }
+    .card li { margin: 6px 0; }
+    .k1 { background: #fff1e0; } .k1 h3 { color: #c24e0a; }
+    .k2 { background: #e6f6ff; } .k2 h3 { color: #1d5e8a; }
+    .k3 { background: #eaf7dc; } .k3 h3 { color: var(--green-dark); }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 22px; }
+    .step { background: #fffdf3; border: 3px dashed #f4c98f; border-radius: 24px; padding: 20px; text-align: center; font-weight: 600; line-height: 1.45; }
+    .step .big { font-size: 2.4rem; }
+    .step b { display: block; font-size: 1.1rem; color: var(--orange-dark); margin: 6px 0 4px; }
+
+    /* ---------- Команда ---------- */
+    .team { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .person { display: flex; gap: 18px; align-items: center; background: #fffdf3; border-radius: 26px; padding: 22px; border: 3px solid #ffe2b8; }
+    .avatar { flex: none; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font-size: 2.2rem; background: #ffe7c7; }
+    .person h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--brown); }
+    .role { margin-top: 4px; font-weight: 600; color: var(--orange-dark); }
+    .mails { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-weight: 700; }
+    .mail { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: #e6f6ff; color: #1d5e8a; padding: 12px 18px; border-radius: 999px; }
+    .mail:hover { background: #d3edfc; }
+
+    /* ---------- Детское оформление ---------- */
+    body {
+      background:
+        radial-gradient(circle, rgba(255,170,60,0.13) 2.5px, transparent 3px) 0 0 / 34px 34px,
+        linear-gradient(180deg, #f3fbe6 0%, #fff6dc 45%, #ffeccc 100%);
+    }
+    .panel { position: relative; border: 5px solid #fff; outline: 4px dashed var(--accent, #ffd28f); outline-offset: -14px; }
+    h2 {
+      display: inline-flex; background: var(--accent, #ffd28f); color: #fff; padding: 10px 24px 12px; border-radius: 22px;
+      transform: rotate(-1.5deg); box-shadow: 0 5px 0 var(--accent-dark, #e09a3e);
+      text-shadow: 0 2px 0 rgba(0,0,0,0.18);
+    }
+    h2 span { filter: drop-shadow(0 2px 0 rgba(0,0,0,0.15)); }
+    .lead { margin-top: 16px; color: var(--accent-dark, var(--green)); }
+    #route    { --accent: #3db34a; --accent-dark: #23863a; }
+    #about    { --accent: #ff8a3d; --accent-dark: #d0611b; }
+    #facts    { --accent: #8e5bd6; --accent-dark: #6a3db0; }
+    #trip     { --accent: #1e9be0; --accent-dark: #146fa8; }
+    #parents  { --accent: #ec4f8a; --accent-dark: #b92f63; }
+    #teachers { --accent: #1aa39a; --accent-dark: #127a73; }
+    #faq      { --accent: #f2a100; --accent-dark: #c27f00; }
+    .peek { position: absolute; width: 96px; z-index: 2; pointer-events: none; filter: drop-shadow(0 6px 6px rgba(0,0,0,0.18)); animation: wiggle 4s ease-in-out infinite; }
+    .peek.r { right: -22px; top: -34px; transform: rotate(12deg); }
+    .peek.l { left: -24px; bottom: -30px; transform: rotate(-12deg); }
+    @keyframes wiggle { 50% { translate: 0 -6px; } }
+
+    /* караван идёт */
+    .caravan { position: relative; height: 130px; margin: 34px 0 -30px; overflow: hidden; }
+    .caravan::before {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
+      background: radial-gradient(ellipse 60% 100% at 50% 100%, #f4c983 0 70%, transparent 71%) 0 0 / 360px 46px repeat-x;
+    }
+    .caravan .walk { position: absolute; bottom: 14px; left: 100%; display: flex; gap: 46px; align-items: flex-end; animation: walk 38s linear infinite; }
+    .caravan .walk img { width: 92px; animation: step .7s ease-in-out infinite alternate; }
+    .caravan .walk img.big { width: 116px; }
+    .caravan .walk img.item { width: 54px; animation-duration: .9s; }
+    @keyframes walk { to { transform: translateX(calc(-100vw - 900px)); } }
+    @keyframes step { to { transform: translateY(-5px) rotate(-2deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .caravan .walk { animation: none; left: 50%; transform: translateX(-50%); }
+      .caravan .walk img, .peek { animation: none; }
+    }
+
+    /* Знаешь ли ты? — карточки-перевёртыши */
+    .flips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .flip { display: block; width: 100%; perspective: 900px; min-height: 210px; cursor: pointer; border: 0; padding: 0; background: none; font: inherit; text-align: center; }
+    .flip .in { display: block; position: relative; width: 100%; height: 100%; min-height: 210px; transition: transform .55s; transform-style: preserve-3d; }
+    .flip.open .in { transform: rotateY(180deg); }
+    .flip .side {
+      position: absolute; inset: 0; backface-visibility: hidden; border-radius: 26px; padding: 22px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.08);
+    }
+    .flip .front { background: var(--bg); color: var(--fg); font-weight: 800; font-size: 1.2rem; line-height: 1.3; }
+    .flip .front img { width: 70px; height: 70px; object-fit: contain; }
+    .flip .front small { font-weight: 600; font-size: 0.85rem; opacity: 0.8; }
+    .flip .back { background: #fff; border: 4px solid var(--bg); color: var(--ink); font-weight: 600; line-height: 1.45; transform: rotateY(180deg); }
+    .flip .back b { color: var(--fg); }
+    .q1 { --bg: #ffe2c4; --fg: #b8500d; } .q2 { --bg: #dff1ff; --fg: #1d5e8a; } .q3 { --bg: #fde0ef; --fg: #a0215c; }
+    .q4 { --bg: #e3f6dc; --fg: #1f6b33; } .q5 { --bg: #ece3fd; --fg: #4d2fa0; } .q6 { --bg: #fff1c9; --fg: #8a5a0e; }
+
+    /* Что взять с собой */
+    .bag { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+    .thing { background: #fff; border: 3px solid #cfe8fb; border-radius: 22px; padding: 16px 10px; text-align: center; font-weight: 700; line-height: 1.3; }
+    .thing .big { font-size: 2.6rem; display: block; margin-bottom: 6px; }
+    .tip { margin-top: 18px; background: #e6f6ff; border-radius: 20px; padding: 14px 18px; font-weight: 600; color: #1d5e8a; }
+
+    /* Вопросы и ответы, контакты */
+    .faq details { background: #fffaf0; border: 3px solid #ffe2a8; border-radius: 20px; margin: 12px 0; }
+    .faq summary, .contacts-toggle summary { cursor: pointer; list-style: none; font-weight: 800; padding: 16px 20px; display: flex; gap: 10px; align-items: center; }
+    .faq summary::-webkit-details-marker, .contacts-toggle summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "＋"; margin-left: auto; color: var(--accent-dark); font-size: 1.3rem; }
+    .faq details[open] summary::after { content: "－"; }
+    .faq details p { margin: 0; padding: 0 20px 18px; line-height: 1.55; }
+    .contacts-toggle summary {
+      justify-content: center; width: fit-content; margin: 0 auto; background: #fff; color: var(--brown);
+      border: 3px solid #ffd28f; border-radius: 999px; padding: 14px 26px; box-shadow: var(--shadow);
+    }
+    .contacts-toggle[open] summary { margin-bottom: 22px; }
+    .contacts-toggle .panel { --accent: #ff8a3d; }
+
+    @media (max-width: 1300px) { .peek.r { right: -6px; } .peek.l { left: -6px; } }
+    @media (max-width: 900px) {
+      .flips { grid-template-columns: 1fr 1fr; }
+      .bag { grid-template-columns: repeat(3, 1fr); }
+      .peek { width: 72px; }
+    }
+    @media (max-width: 640px) {
+      .flips { grid-template-columns: 1fr; }
+      .bag { grid-template-columns: repeat(2, 1fr); }
+      .peek.r { right: -8px; } .peek.l { left: -8px; }
+      .caravan { height: 100px; } .caravan .walk img { width: 70px; } .caravan .walk img.big { width: 88px; }
+    }
+
+    footer { margin-top: 70px; background: var(--green-dark); color: #eaf7dc; padding: 34px 0; }
+    .foot { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+    .foot a { color: #fff; font-weight: 700; margin-left: 16px; }
+    .foot a:first-child { margin-left: 0; }
+
+    /* ---------- Адаптивность ---------- */
+    @media (max-width: 1100px) {
+      .features-inner { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .route { grid-template-columns: repeat(5, minmax(0, 1fr)); row-gap: 28px; }
+      .route::before { display: none; }
+    }
+    @media (max-width: 1360px) { .menu a .t { display: none; } }
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; text-align: center; }
+      .scene { min-height: 0; order: 2; }
+      .sign { display: none; }
+      .trosha { margin: 10px auto 0; width: 70%; max-width: 320px; }
+      .bubble-side { order: 3; }
+      .badge-img { display: none; }
+      .cards, .steps { grid-template-columns: 1fr 1fr; }
+      .team { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav { top: 8px; }
+      .nav-inner { border-radius: 26px; flex-wrap: wrap; justify-content: center; padding: 10px; gap: 6px; }
+      .menu { margin: 0; justify-content: center; flex-wrap: wrap; }
+      .menu a { padding: 8px 10px; font-size: 0.9rem; }
+      .menu a.cta { padding: 8px 14px; font-size: 0.85rem; }
+      .hero { margin-top: -130px; padding-top: 170px; }
+      .features-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .route { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+      .circle { width: 92px; }
+      .num { width: 32px; height: 32px; font-size: 1rem; }
+      .stop-name { font-size: 0.82rem; }
+      .panel { padding: 22px 16px 26px; border-radius: 26px; }
+      .cards, .steps { grid-template-columns: 1fr; }
+      .foot a { margin: 0 12px 0 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top"><img src="images/icon.png" alt="">Маленький караван</a>
+    <nav class="menu" aria-label="Меню">
+      <a href="#about">📍 <span class="t">О приложении</span></a>
+      <a href="#route">🗺️ <span class="t">Маршрут</span></a>
+      <a href="#facts">💡 <span class="t">Знаешь ли ты?</span></a>
+      <a href="#parents">👨‍👩‍👧 <span class="t">Для родителей</span></a>
+      <a href="#teachers">🏫 <span class="t">Педагогам</span></a>
+      <a href="#faq">❓ <span class="t">Вопросы</span></a>
+      <a class="cta" href="../">Начать прогулку</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="scene">
+      <div class="sign" aria-hidden="true"><div class="board">ТРОИЦК</div><div class="post"></div></div>
+      <img class="trosha logo" src="images/logo.webp" alt="Верблюжонок Троша на фоне Свято-Троицкого собора и карты">
+    </div>
+
+    <div class="title-block">
+      <h1 class="title">Маленький<span>караван</span></h1>
+      <div class="subtitle">Интерактивная прогулка по Троицку<br>для детей 4–7 лет с родителями</div>
+      <div>
+        <a class="download" href="../">🐫 Пройти прогулку</a>
+      </div>
+      <div class="download-note">Прямо в браузере телефона — iPhone и Android, без установки · бесплатно · без рекламы<br>
+        Для Android есть и приложение: <a href="https://github.com/qwest65/malenkiy-karavan/releases/latest/download/MalenkiyKaravan.apk">скачать APK</a></div>
+    </div>
+
+    <div class="bubble-side">
+      <div class="bubble">Помоги <b>Троше</b><br>найти пропавшие вещи<br>и узнай интересные<br>факты о Троицке!</div>
+      <button class="listen" id="listen" type="button" aria-label="Послушать, что говорит Троша"><span class="ic">🔊</span><span class="lbl">Послушай Трошу</span></button>
+      <audio id="voice" src="audio/trosha.mp3" preload="none"></audio>
+      <img class="badge-img" src="../stickers/badge.webp" alt="Значок «Юный караванщик»">
+    </div>
+  </div>
+</header>
+
+<div class="wrap features">
+  <div class="features-inner">
+    <div class="feature f1"><span class="ico">🗺️</span>Интерактивная карта и маршруты</div>
+    <div class="feature f2"><span class="ico">🚶</span>Пешеходная навигация</div>
+    <div class="feature f3"><span class="ico">📖</span>Интересные рассказы</div>
+    <div class="feature f4"><span class="ico">❓</span>Вопросы и задания</div>
+    <div class="feature f5"><span class="ico">📷</span>Фотографии во время прогулки</div>
+    <div class="feature f6"><span class="ico">🎒</span>Альбом найденных вещей</div>
+    <div class="feature f7"><span class="ico">🖼️</span>Создание коллажа</div>
+  </div>
+</div>
+
+<div class="caravan" aria-hidden="true">
+  <div class="walk">
+    <img class="item" src="../stickers/bell.webp" alt="">
+    <img class="big" src="../stickers/trosha.webp" alt="">
+    <img src="../stickers/trosha.webp" alt="">
+    <img class="item" src="../stickers/fabrics.webp" alt="">
+    <img src="../stickers/trosha.webp" alt="">
+    <img class="item" src="../stickers/tea.webp" alt="">
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section id="route">
+    <div class="panel">
+      <div class="head">
+        <h2><span>📍</span>Основной маршрут «Троша потерялся»</h2>
+        <a class="btn-green" href="https://www.openstreetmap.org/?mlat=54.0823&amp;mlon=61.5594#map=16/54.0823/61.5594" target="_blank" rel="noopener">🗺️ Посмотреть все точки на карте</a>
+      </div>
+      <p class="lead">9 интересных остановок в исторической части Троицка</p>
+
+      <div class="route">
+        <a class="stop c1" href="https://www.openstreetmap.org/?mlat=54.077456&amp;mlon=61.556294#map=18/54.077456/61.556294" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">1</span><img src="../stickers/scroll.webp" alt=""></div>
+          <div class="stop-name">Памятный камень Троицкой крепости</div><div class="stop-item">свиток с картой</div>
+        </a>
+        <a class="stop c2" href="https://www.openstreetmap.org/?mlat=54.077776&amp;mlon=61.557391#map=18/54.077776/61.557391" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">2</span><img src="../stickers/bell.webp" alt=""></div>
+          <div class="stop-name">Свято-Троицкий собор</div><div class="stop-item">колокольчик</div>
+        </a>
+        <a class="stop c3" href="https://www.openstreetmap.org/?mlat=54.081621&amp;mlon=61.561152#map=18/54.081621/61.561152" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">3</span><img src="../stickers/blanket.webp" alt=""></div>
+          <div class="stop-name">Бронзовый верблюд</div><div class="stop-item">попона</div>
+        </a>
+        <a class="stop c4" href="https://www.openstreetmap.org/?mlat=54.081813&amp;mlon=61.560374#map=18/54.081813/61.560374" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">4</span><img src="../stickers/fabrics.webp" alt=""></div>
+          <div class="stop-name">Торговые ряды</div><div class="stop-item">яркие ткани</div>
+        </a>
+        <a class="stop c5" href="https://www.openstreetmap.org/?mlat=54.082778&amp;mlon=61.559081#map=18/54.082778/61.559081" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">5</span><img src="../stickers/gingerbread.webp" alt=""></div>
+          <div class="stop-name">Центральная площадь</div><div class="stop-item">пряники</div>
+        </a>
+        <a class="stop c6" href="https://www.openstreetmap.org/?mlat=54.083458&amp;mlon=61.559628#map=18/54.083458/61.559628" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">6</span><img src="../stickers/whistle.webp" alt=""></div>
+          <div class="stop-name">Скульптура «Городовой»</div><div class="stop-item">свисток</div>
+        </a>
+        <a class="stop c7" href="https://www.openstreetmap.org/?mlat=54.083992&amp;mlon=61.559019#map=18/54.083992/61.559019" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">7</span><img src="../stickers/key.webp" alt=""></div>
+          <div class="stop-name">Гостиница «Центральная»</div><div class="stop-item">ключик</div>
+        </a>
+        <a class="stop c8" href="https://www.openstreetmap.org/?mlat=54.085255&amp;mlon=61.558237#map=18/54.085255/61.558237" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">8</span><img src="../stickers/book.webp" alt=""></div>
+          <div class="stop-name">Памятник Крылову и героям его басен</div><div class="stop-item">книжка басен</div>
+        </a>
+        <a class="stop c9" href="https://www.openstreetmap.org/?mlat=54.086813&amp;mlon=61.560445#map=18/54.086813/61.560445" target="_blank" rel="noopener">
+          <div class="circle"><span class="num">9</span><img src="../stickers/tea.webp" alt=""></div>
+          <div class="stop-name">Пассаж братьев Яушевых</div><div class="stop-item">восточный чай</div>
+        </a>
+      </div>
+
+      <div class="route-facts">
+        <span class="chip">👣 около 1,7 км по улицам и скверам</span>
+        <span class="chip">⏱️ около 1,5 часа с остановками</span>
+        <span class="chip">🧩 можно собрать свой маршрут из любых точек</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="panel">
+      <img class="peek r" src="../stickers/bell.webp" alt="" aria-hidden="true">
+      <h2><span>🐫</span>О приложении</h2>
+      <p class="lead">Верблюд — символ Троицка: через город шли караваны из Бухары и Ташкента</p>
+      <div class="cards">
+        <div class="card k1">
+          <h3>🐪 Кто такой Троша</h3>
+          <p>Верблюжонок Троша засмотрелся на голубей, отстал от каравана и растерял по городу свои вещи. Ребёнок вместе с родителями идёт по Троицку и помогает их найти.</p>
+        </div>
+        <div class="card k2">
+          <h3>🔔 Что на каждой точке</h3>
+          <p>Звенит караванный колокольчик, рассказчик коротко и понятно объясняет, что это за место, Троша находит свою вещь, а потом — вопрос с картинками и маленькая игра.</p>
+        </div>
+        <div class="card k3">
+          <h3>🏅 Награда</h3>
+          <p>Найденные вещи попадают в альбом наклеек, из фото на точках сам собирается коллаж, а за весь маршрут ребёнок получает значок «Юный караванщик».</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="big">📲</div><b>Скачайте</b>приложение на телефон с Android</div>
+        <div class="step"><div class="big">🗺️</div><b>Выберите маршрут</b>весь, короткий или свой из любых точек</div>
+        <div class="step"><div class="big">🚶‍♀️</div><b>Идите за Трошей</b>карта ведёт как навигатор, Троша подсказывает повороты</div>
+        <div class="step"><div class="big">📸</div><b>Собирайте находки</b>наклейки, фото и коллаж на память</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="facts">
+    <div class="panel">
+      <img class="peek r" src="../stickers/scroll.webp" alt="" aria-hidden="true">
+      <h2><span>💡</span>Знаешь ли ты?</h2>
+      <p class="lead">Нажми на карточку — Троша расскажет ответ. Остальное узнаешь на прогулке!</p>
+      <div class="flips">
+        <button class="flip q1" type="button" aria-pressed="false">
+          <span class="in">
+            <span class="side front"><img src="../stickers/blanket.webp" alt="">Почему на гербе Троицка — верблюд?<small>нажми, чтобы узнать</small></span>
+            <span class="side back"><span>Давным-давно в Троицк приходили <b>караваны верблюдов</b> из Бухары, Хивы и Ташкента. Они везли ткани, ковры и сладости на большую ярмарку.</span></span>
+          </span>
+        </button>
+        <button class="flip q2" type="button" aria-pressed="false">
+          <span class="in">
+            <span class="side front"><img src="../stickers/scroll.webp" alt="">Сколько лет Троицку?<small>нажми, чтобы узнать</small></span>
+            <span class="side back"><span>Город вырос из крепости, которую построили <b>22 мая 1743 года</b> там, где встречаются реки Уй и Увелька. Это почти 300 лет назад!</span></span>
+          </span>
+        </button>
+        <button class="flip q3" type="button" aria-pressed="false">
+          <span class="in">
+            <span class="side front"><img src="../stickers/tea.webp" alt="">Какое чудо было в пассаже Яушевых?<small>нажми, чтобы узнать</small></span>
+            <span class="side back"><span>Больше ста лет назад там были <b>лифт, телефон и электрические лампочки</b>. Тогда это было как в сказке!</span></span>
+          </span>
+        </button>
+        <button class="flip q4" type="button" aria-pressed="false">
+          <span class="in">
+            <span class="side front"><img src="../stickers/whistle.webp" alt="">Кто такой городовой?<small>нажми, чтобы узнать</small></span>
+            <span class="side back"><span>Так раньше называли <b>полицейского</b>. Он стоял на улице, следил за порядком и помогал найти дорогу.</span></span>
+          </span>
+        </button>
+        <button class="flip q5" type="button" aria-pressed="false">
+          <span class="in">
+            <span class="side front"><img src="../stickers/key.webp" alt="">Как купец выиграл спор?<small>нажми, чтобы узнать</small></span>
+            <span class="side back"><span>Купец Башкиров поспорил, что в Троицке есть самая лучшая гостиница. А её ещё не было! Тогда он <b>быстро построил её</b> — и выиграл.</span></span>
+          </span>
+        </button>
+        <button class="flip q6" type="button" aria-pressed="false">
+          <span class="in">
+            <span class="side front"><img src="../stickers/book.webp" alt="">Кто сидит на скамейке с вороной и лисицей?<small>нажми, чтобы узнать</small></span>
+            <span class="side back"><span>Это <b>Иван Андреевич Крылов</b> — он сочинял басни, короткие смешные истории про зверей.</span></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="trip">
+    <div class="panel">
+      <img class="peek r" src="../stickers/blanket.webp" alt="" aria-hidden="true">
+      <h2><span>🎒</span>Что взять с собой</h2>
+      <p class="lead">Собираемся в поход вместе с Трошей</p>
+      <div class="bag">
+        <div class="thing"><span class="big">👟</span>Удобную обувь</div>
+        <div class="thing"><span class="big">🔋</span>Заряженный телефон</div>
+        <div class="thing"><span class="big">💧</span>Воду</div>
+        <div class="thing"><span class="big">🍎</span>Перекус</div>
+        <div class="thing"><span class="big">🧢</span>Одежду по погоде</div>
+        <div class="thing"><span class="big">😊</span>Хорошее настроение</div>
+      </div>
+      <div class="tip">💡 Весь маршрут — около 1,5 часа. Если малыш быстро устаёт, выберите короткую прогулку «Крепость и собор»: 3 точки и около 40 минут.</div>
+    </div>
+  </section>
+
+  <section id="parents">
+    <div class="panel">
+      <img class="peek r" src="../stickers/gingerbread.webp" alt="" aria-hidden="true">
+      <h2><span>👨‍👩‍👧</span>Для родителей</h2>
+      <p class="lead">Прогулка, на которой интересно и детям, и взрослым</p>
+      <div class="cards">
+        <div class="card k2">
+          <h3>🛡️ Безопасно</h3>
+          <ul>
+            <li>Без регистрации и рекламы</li>
+            <li>Не собирает личные данные</li>
+            <li>Напоминает «Держи взрослого за руку» и предупреждает о дорогах</li>
+          </ul>
+        </div>
+        <div class="card k1">
+          <h3>📚 Для взрослых</h3>
+          <ul>
+            <li>На каждой точке — подсказка, о чём поговорить с ребёнком</li>
+            <li>Подробная историческая справка голосом</li>
+            <li>Пауза, пропуск точки и завершение в любой момент</li>
+          </ul>
+        </div>
+        <div class="card k3">
+          <h3>📶 Без интернета</h3>
+          <ul>
+            <li>Озвучка и пешеходные линии уже внутри приложения</li>
+            <li>Прибытие на точку определяется по GPS</li>
+            <li>Фото хранятся только на вашем телефоне</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="teachers">
+    <div class="panel">
+      <img class="peek r" src="../stickers/book.webp" alt="" aria-hidden="true">
+      <h2><span>🏫</span>Педагогам</h2>
+      <p class="lead">Готовая форма краеведческой работы с дошкольниками</p>
+      <div class="cards">
+        <div class="card k3">
+          <h3>🧺 В детском саду</h3>
+          <p>До прогулки — знакомство с Трошей и его историей. На прогулке — маршрутный лист с заданиями. После — выставка коллажей и разговор о родном городе.</p>
+        </div>
+        <div class="card k1">
+          <h3>🏡 Семейный квест выходного дня</h3>
+          <p>Педагог предлагает семьям пройти маршрут в выходные, а в понедельник дети рассказывают, какие вещи Троши нашли и что узнали о Троицке.</p>
+        </div>
+        <div class="card k2">
+          <h3>📄 Материалы</h3>
+          <p>Технологическая карта занятия и маршрутный лист для печати. <a href="#contacts">Напишите нам</a> — пришлём бесплатно.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="panel faq">
+      <img class="peek r" src="../stickers/key.webp" alt="" aria-hidden="true">
+      <h2><span>❓</span>Вопросы и ответы</h2>
+      <p class="lead">Коротко о главном</p>
+      <details><summary>💰 Сколько стоит приложение?</summary><p>Нисколько. Приложение бесплатное, без рекламы и без покупок внутри.</p></details>
+      <details><summary>📶 Нужен ли интернет?</summary><p>Только чтобы первый раз открыть прогулку: озвучка и пешеходные маршруты сразу сохраняются в телефон, дальше прогулка работает и без интернета, а прибытие на точку определяется по GPS.</p></details>
+      <details><summary>📱 На каком телефоне работает?</summary><p>На любом современном телефоне — iPhone и Android: прогулка открывается прямо в браузере, в том числе из Telegram и MAX, и её можно поставить иконкой на экран «Домой». Для Android 8.0 и новее есть и отдельное приложение.</p></details>
+      <details><summary>⏸️ Можно ли прерваться и продолжить потом?</summary><p>Да. Прогулку можно поставить на паузу, пропустить точку или завершить в любой момент — найденные вещи останутся в альбоме.</p></details>
+      <details><summary>🧒 Для какого возраста?</summary><p>Для детей 4–7 лет вместе со взрослыми. Старшим детям и родителям тоже интересно: для взрослых на каждой точке есть историческая справка.</p></details>
+      <details><summary>🔒 Собирает ли приложение данные?</summary><p>Нет. Регистрации нет, фото хранятся только на вашем телефоне. Подробнее — в <a href="privacy.html">политике конфиденциальности</a>.</p></details>
+    </div>
+  </section>
+
+  <section id="contacts">
+    <details class="contacts-toggle" id="contacts-box">
+    <summary>✉️ Связаться с авторами</summary>
+    <div class="panel">
+      <h2><span>✉️</span>Контакты</h2>
+      <p class="lead">Команда проекта «Маленький караван»</p>
+      <div class="team">
+        <div class="person">
+          <div class="avatar">👩‍💼</div>
+          <div>
+            <h3>Сердюкова Анна Григорьевна</h3>
+            <div class="role">Руководитель проекта, автор методики, педагог дошкольного образования</div>
+            <a class="mail" href="mailto:qwest_06@mail.ru">📧 qwest_06@mail.ru</a>
+          </div>
+        </div>
+        <div class="person">
+          <div class="avatar">👨‍💻</div>
+          <div>
+            <h3>Сердюков Константин Леонидович</h3>
+            <div class="role">Разработчик</div>
+            <a class="mail" href="mailto:gubon0160@gmail.com">📧 gubon0160@gmail.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    </details>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><b>Маленький караван</b> · © 2026 Сердюкова А. Г., Сердюков К. Л.<br><small>Голоса: рассказчик — Яндекс SpeechKit, верблюжонок Троша — ElevenLabs.</small></div>
+    <div>
+      <a href="privacy.html">Политика конфиденциальности</a>
+      <a href="#contacts">Связаться с нами</a>
+      <a href="https://github.com/qwest65/malenkiy-karavan">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('listen'), audio = document.getElementById('voice');
+    var lbl = btn.querySelector('.lbl'), ic = btn.querySelector('.ic');
+    function idle() { btn.classList.remove('playing'); lbl.textContent = 'Послушай Трошу'; ic.textContent = '🔊'; }
+    btn.addEventListener('click', function () {
+      if (audio.paused) {
+        audio.currentTime = 0;
+        audio.play().then(function () { btn.classList.add('playing'); lbl.textContent = 'Троша говорит…'; ic.textContent = '⏸'; }).catch(idle);
+      } else { audio.pause(); idle(); }
+    });
+    audio.addEventListener('ended', idle);
+  })();
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      var on = c.classList.toggle('open'); c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  });
+  (function () {
+    var box = document.getElementById('contacts-box');
+    function check() { if (location.hash === '#contacts') box.open = true; }
+    window.addEventListener('hashchange', check); check();
+    document.querySelectorAll('a[href="#contacts"]').forEach(function (a) { a.addEventListener('click', function () { box.open = true; }); });
+  })();
+</script>
+
+</body>
+</html>
