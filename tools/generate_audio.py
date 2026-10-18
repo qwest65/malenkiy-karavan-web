@@ -13,6 +13,7 @@
         --trosha ru-RU-SvetlanaNeural --trosha-pitch +25Hz
     python3 tools/generate_audio.py --engine edge --samples samples/   # образцы голосов
     YANDEX_SPEECHKIT_KEY=… python3 tools/generate_audio.py --yandex-narrator ermil   # только рассказчик
+    YANDEX_SPEECHKIT_KEY=… python3 tools/generate_audio.py --site-facts ermil   # ответы на карточках сайта
 
 Сейчас рассказчик озвучен Яндекс SpeechKit (голос ermil), а Троша — ElevenLabs: его фразы
 записаны отдельно, и режим --yandex-narrator их не трогает.
@@ -36,6 +37,7 @@ from update_files import update_files
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ROUTE = ROOT / "data/route.json"
 AUDIO = ROOT / "audio"
+SITE = ROOT / "site"
 MP3_KBPS = 64
 
 # --- Piper -------------------------------------------------------------------------------
@@ -275,6 +277,19 @@ def generate_yandex_narrator(route, voice, role):
         write(AUDIO / f"stop{n}_parent.mp3", *yandex_narrate(stop["parent_story"], voice, role), tail=PAUSE)
 
 
+def site_facts():
+    """Ответы с карточек «Знаешь ли ты?» на сайте проекта — по порядку карточек."""
+    page = (SITE / "index.html").read_text(encoding="utf-8")
+    backs = re.findall(r'<span class="side back"><span>(.*?)</span></span>', page, re.S)
+    return [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", b)).strip() for b in backs]
+
+
+def generate_site_facts(voice, role):
+    """Озвучивает ответы на карточках сайта: site/audio/fact1.mp3, fact2.mp3…"""
+    for n, text in enumerate(site_facts(), start=1):
+        write(SITE / "audio" / f"fact{n}.mp3", *yandex_narrate(text, voice, role))
+
+
 # --- Общее -------------------------------------------------------------------------------
 
 # Ударения, которые синтезатор ставит неверно. Знак ударения (U+0301) добавляется только
@@ -456,12 +471,15 @@ def main():
     parser.add_argument("--yandex-v3-trosha", type=pathlib.Path, help="варианты Троши с поднятым тоном (API v3)")
     parser.add_argument("--yandex-narrator", help="переозвучить только рассказчика голосом Яндекса, например ermil")
     parser.add_argument("--yandex-role", default="neutral", help="амплуа голоса Яндекса")
+    parser.add_argument("--site-facts", help="озвучить ответы на карточках сайта голосом Яндекса, например ermil")
     args = parser.parse_args()
     if args.engine == "edge":
         args.narrator = args.narrator or "ru-RU-DmitryNeural"
         args.trosha = args.trosha or "ru-RU-SvetlanaNeural"
     route = json.loads(ROUTE.read_text(encoding="utf-8"))
-    if args.yandex_narrator:
+    if args.site_facts:
+        generate_site_facts(args.site_facts, args.yandex_role)
+    elif args.yandex_narrator:
         generate_yandex_narrator(route, args.yandex_narrator, args.yandex_role)
         update_files()
     elif args.yandex_v3_trosha:
