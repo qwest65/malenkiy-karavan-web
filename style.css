@@ -220,7 +220,7 @@ body.walking #app > * { pointer-events: auto; }
 .dialog-wrap { position: fixed; inset: 0; z-index: 70; background: rgba(59,36,21,0.45); display: grid; place-items: center; padding: 24px; animation: fade .2s; }
 .dialog { width: 100%; max-width: 380px; background: var(--card); border-radius: 28px; padding: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
 .dialog-t { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
-.dialog-s { font-size: 16px; line-height: 1.45; color: var(--ink); }
+.dialog-s { font-size: 16px; line-height: 1.45; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
 .dialog-b { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 20px; }
 .dialog-b .link { color: var(--ink); font-size: 17px; }
 
