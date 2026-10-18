@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -1532,8 +1532,13 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 
 const APP_URL = 'https://qwest65.github.io/malenkiy-karavan-web/';
-/** Встроенные браузеры Telegram, ВК, Instagram и т. п.: там часто нет геопозиции и звука. */
-const inAppBrowser = /Telegram|VKClient|vkontakte|Instagram|FBAN|FBAV|OKApp|; wv\)/i.test(navigator.userAgent);
+/** Встроенные браузеры Telegram, ВК, MAX, Instagram и т. п.: там часто нет геопозиции и звука. */
+const inAppBrowser = /Telegram|VKClient|vkontakte|Instagram|FBAN|FBAV|OKApp|OneMe|; wv\)/i.test(navigator.userAgent);
+/**
+ * Встроенный браузер приложения на iPhone, который не называет себя (так открывает ссылки MAX):
+ * в подписи нет «Safari/». Только вместе с отказом геопозиции — тогда зовём в Safari.
+ */
+const iosWebView = isIOS && !/Safari\//.test(navigator.userAgent);
 
 /** Ссылка, открывающая прогулку в обычном браузере: Safari на iPhone, браузер по умолчанию на Android. */
 function browserLink() {
@@ -1542,6 +1547,15 @@ function browserLink() {
 }
 
 const mustOpenInBrowser = () => inAppBrowser && !standalone;
+
+/** Геопозиция так и не пришла во встроенном браузере — подсказка на прогулке «откройте в Safari». */
+function geoBrowserHelp() {
+  if (standalone || !(inAppBrowser || iosWebView) || S.fix) return '';
+  if (GEO.status !== 'denied' && GEO.status !== 'unsupported' && Date.now() - GEO.since < 20000) return '';
+  const where = isIOS ? 'Safari' : 'браузере';
+  return `<div class="hint geo-help" style="background:#fff1c9;color:#7a4b00">
+    Здесь телефон не даёт Троше узнать, где вы. <a href="${browserLink()}" style="color:inherit;font-weight:700">Открыть в ${where}</a></div>`;
+}
 
 function installHint() {
   // Открыто в Telegram, ВК или с экрана «Домой» iPhone — там геопозиция не работает: ведём в браузер.
@@ -1658,6 +1672,7 @@ function walkScreen() {
     </div>
     <div class="walk-panel" id="walk-panel">
       <button class="grip" data-act="panel" aria-label="Свернуть или развернуть"><span></span></button>
+      <div id="geo-help"></div>
       ${S.panelOpen ? `
         ${stickerRow(j.plan)}
         <div class="target">Точка ${j.position + 1} из ${j.plan.length}: ${esc(stop.title)}</div>
@@ -1720,6 +1735,11 @@ function updateWalkView() {
   const d = S.distance;
   const big = document.getElementById('dist-big');
   const small = document.getElementById('dist-small');
+  const help = document.getElementById('geo-help');
+  if (help) {
+    const html = geoBrowserHelp();
+    if (help.dataset.html !== html) { help.dataset.html = html; help.innerHTML = html; }
+  }
   if (big) {
     big.innerHTML = d != null
       ? `<div class="steps-big">≈ ${kidSteps(d)} ${stepsWord(kidSteps(d))}</div><div class="muted" style="font-size:14px">${formatDistance(d)} для взрослых</div>`
