@@ -3,7 +3,7 @@
  * сохраняется в телефоне. Кусочки карты запоминаются по мере просмотра.
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v4';
+const VERSION = 'v5';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 const MAP_CACHE = 'karavan-map';
@@ -11,7 +11,7 @@ const SHELL = [
   './', 'index.html', 'app.js', 'style.css', 'manifest.webmanifest',
   'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css',
   'data/route.json', 'data/paths.json', 'data/streets.json', 'data/files.json',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png', 'images/og.png',
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png', 'images/og.jpg',
 ];
 
 /** Safari просит озвучку кусками (Range) и без ответа 206 не играет её из памяти. */
