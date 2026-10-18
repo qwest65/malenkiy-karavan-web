@@ -85,6 +85,9 @@ python tools/build_web.py ../malenkiy-karavan
 Если карточка ссылки в Telegram старая — отправьте ссылку официальному боту
 [@WebpageBot](https://t.me/WebpageBot), он обновит её.
 
+В MAX старую карточку обновить нельзя — отправьте ссылку с хвостиком, например
+`https://qwest65.github.io/malenkiy-karavan-web/?v=3` (каждый раз новое число).
+
 ## Связанные проекты
 
 - 📱 [Android-приложение](https://github.com/qwest65/malenkiy-karavan) — тот же маршрут, есть в RuStore.
