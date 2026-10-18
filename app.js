@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -28,6 +28,9 @@ const MINUTES_PER_STOP = 7;
 const $app = document.getElementById('app');
 const $overlay = document.getElementById('overlay');
 const $mapScreen = document.getElementById('map-screen');
+
+/** Сохранение в телефон для работы без интернета: что прислал service worker. */
+const OFFLINE = { done: 0, total: 0, update: false, hideAt: 0 };
 
 let route = null;
 let legs = new Map();
@@ -1582,6 +1585,22 @@ function installHint() {
   return '';
 }
 
+function offlineProgress() {
+  const { done, total } = OFFLINE;
+  if (!total) return '';
+  if (done >= total) {
+    return Date.now() < OFFLINE.hideAt ? '<div class="offline-bar done">✅ Готово — прогулка работает без интернета</div>' : '';
+  }
+  const pct = Math.floor(done * 100 / total);
+  const what = OFFLINE.update ? 'Загружаем новую версию' : 'Сохраняем прогулку в телефон, чтобы работала без интернета';
+  return `<div class="offline-bar"><div>📥 ${what}: ${pct}%</div><div class="track"><div style="width:${pct}%"></div></div></div>`;
+}
+
+function showOfflineProgress() {
+  const el = document.getElementById('offline-progress');
+  if (el) el.innerHTML = offlineProgress();
+}
+
 function homeScreen() {
   const j = S.journey;
   return `<div class="page">
@@ -1606,6 +1625,7 @@ function homeScreen() {
     <button class="btn soft" data-act="album">Мой альбом</button>
     ${mustOpenInBrowser() ? '' : installHint()}
     ${j.found.length || j.badge ? `<button class="link" data-act="reset">Очистить альбом</button>` : ''}
+    <div id="offline-progress">${offlineProgress()}</div>
     <button class="link muted" data-act="about" style="font-size:12px;opacity:.7;min-height:0;padding:4px">Веб-версия ${APP_VERSION}</button>
   </div>`;
 }
@@ -2006,6 +2026,17 @@ async function boot() {
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     // Обновление приложения: новая версия приходит в фоне — на главном экране перезапускаемся сами.
     const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'offline-progress') return;
+      OFFLINE.done = e.data.done;
+      OFFLINE.total = e.data.total;
+      OFFLINE.update = hadController;
+      if (OFFLINE.done >= OFFLINE.total) {
+        OFFLINE.hideAt = Date.now() + 5000;
+        setTimeout(showOfflineProgress, 5100);
+      }
+      showOfflineProgress();
+    });
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (hadController && S.screen === 'home') location.reload();
     });
