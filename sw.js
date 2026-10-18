@@ -3,7 +3,7 @@
  * сохраняется в телефоне. Кусочки карты запоминаются по мере просмотра.
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v8';
+const VERSION = 'v9';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 const MAP_CACHE = 'karavan-map';
@@ -34,14 +34,30 @@ async function partial(response, range) {
   });
 }
 
+/** Сколько файлов уже сохранено — открытые страницы показывают это полоской на главном экране. */
+async function notify(done, total) {
+  for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) {
+    c.postMessage({ type: 'offline-progress', done, total });
+  }
+}
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(APP_CACHE);
-    // Мимо кэша браузера: GitHub Pages разрешает держать файлы 10 минут, и без этого
-    // в новую версию мог попасть старый app.js.
-    await cache.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })));
     const files = await (await fetch('data/files.json', { cache: 'reload' })).json();
-    await cache.addAll(files.map(u => new Request(u, { cache: 'reload' })));
+    const all = [...SHELL, ...files];
+    const queue = all.slice();
+    let done = 0;
+    await notify(0, all.length);
+    // По одному файлу в шесть потоков, чтобы считать проценты. Мимо кэша браузера: GitHub Pages
+    // разрешает держать файлы 10 минут, и без этого в новую версию мог попасть старый app.js.
+    const worker = async () => {
+      while (queue.length) {
+        await cache.add(new Request(queue.shift(), { cache: 'reload' }));
+        await notify(++done, all.length);
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, worker));
     await self.skipWaiting();
   })());
 });

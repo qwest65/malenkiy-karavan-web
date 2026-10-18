@@ -227,3 +227,8 @@ body.walking #app > * { pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+.offline-bar { width: 100%; font-size: 14px; line-height: 1.4; color: var(--muted); text-align: center; }
+.offline-bar .track { height: 6px; border-radius: 3px; background: rgba(122,97,80,0.18); margin-top: 6px; overflow: hidden; }
+.offline-bar .track div { height: 100%; background: var(--red); transition: width .3s; }
+.offline-bar.done { color: #2e7d32; font-weight: 700; }
