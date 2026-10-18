@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.3';
+const APP_VERSION = '1.4';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -1534,11 +1534,6 @@ window.addEventListener('beforeinstallprompt', e => {
 const APP_URL = 'https://qwest65.github.io/malenkiy-karavan-web/';
 /** Встроенные браузеры Telegram, ВК, MAX, Instagram и т. п.: там часто нет геопозиции и звука. */
 const inAppBrowser = /Telegram|VKClient|vkontakte|Instagram|FBAN|FBAV|OKApp|OneMe|; wv\)/i.test(navigator.userAgent);
-/**
- * Встроенный браузер приложения на iPhone, который не называет себя (так открывает ссылки MAX):
- * в подписи нет «Safari/». Только вместе с отказом геопозиции — тогда зовём в Safari.
- */
-const iosWebView = isIOS && !/Safari\//.test(navigator.userAgent);
 
 /** Ссылка, открывающая прогулку в обычном браузере: Safari на iPhone, браузер по умолчанию на Android. */
 function browserLink() {
@@ -1548,13 +1543,20 @@ function browserLink() {
 
 const mustOpenInBrowser = () => inAppBrowser && !standalone;
 
-/** Геопозиция так и не пришла во встроенном браузере — подсказка на прогулке «откройте в Safari». */
+/**
+ * Геопозиция не пришла — подсказка на прогулке «откройте в Safari / браузере». Чаще всего это
+ * встроенный браузер мессенджера: MAX, например, подписывается как обычный Safari, и по подписи
+ * его не узнать. Поэтому смотрим только на то, есть ли координаты.
+ */
 function geoBrowserHelp() {
-  if (standalone || !(inAppBrowser || iosWebView) || S.fix) return '';
-  if (GEO.status !== 'denied' && GEO.status !== 'unsupported' && Date.now() - GEO.since < 20000) return '';
+  if (standalone || S.fix) return '';
+  const failed = GEO.status === 'denied' || GEO.status === 'unsupported' || Date.now() - GEO.since > 45000;
+  if (!failed) return '';
   const where = isIOS ? 'Safari' : 'браузере';
   return `<div class="hint geo-help" style="background:#fff1c9;color:#7a4b00">
-    Здесь телефон не даёт Троше узнать, где вы. <a href="${browserLink()}" style="color:inherit;font-weight:700">Открыть в ${where}</a></div>`;
+    Здесь телефон не даёт Троше узнать, где вы. Открыли из мессенджера — откройте прогулку в ${where}:
+    <a href="${browserLink()}" style="color:inherit;font-weight:700">Открыть в ${where}</a>
+    <div style="font-size:13px;margin-top:4px">Не открылось? В меню ⋯ или ☰ мессенджера выберите «Открыть в ${where}».</div></div>`;
 }
 
 function installHint() {
@@ -1602,7 +1604,7 @@ function homeScreen() {
     <button class="btn soft" data-act="album">Мой альбом</button>
     ${mustOpenInBrowser() ? '' : installHint()}
     ${j.found.length || j.badge ? `<button class="link" data-act="reset">Очистить альбом</button>` : ''}
-    <div class="muted" style="font-size:12px;opacity:.7">Веб-версия ${APP_VERSION}</div>
+    <button class="link muted" data-act="about" style="font-size:12px;opacity:.7;min-height:0;padding:4px">Веб-версия ${APP_VERSION}</button>
   </div>`;
 }
 
@@ -1955,6 +1957,7 @@ $app.addEventListener('click', e => {
     case 'gallery': pickPhoto(+d.stop, false); break;
     case 'share': shareCollage(); break;
     case 'hideHint': try { localStorage.setItem(HINT_KEY, 'hidden'); } catch (_) { /* нет хранилища */ } render(); break;
+    case 'about': ask(`Веб-версия ${APP_VERSION}`, `Браузер: ${navigator.userAgent}${GEO_DIAG.error ? `\nГеопозиция: ${GEO_DIAG.error}` : ''}`, 'Понятно', 'Закрыть'); break;
     case 'install': if (installEvent) { installEvent.prompt(); installEvent = null; render(); } break;
   }
 });
