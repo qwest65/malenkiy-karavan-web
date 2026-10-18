@@ -6,6 +6,8 @@ name: Voice
 #   Яндекс SpeechKit. Фразы Троши (ElevenLabs) не трогаются. Нужен секрет YANDEX_SPEECHKIT_KEY —
 #   API-ключ сервисного аккаунта Яндекс Облака с ролью ai.speechkit-tts.user
 #   (Settings → Secrets and variables → Actions → New repository secret).
+# site-facts — озвучить ответы на карточках «Знаешь ли ты?» сайта проекта (site/audio/factN.mp3)
+#   тем же голосом рассказчика. Запускать после правки текста карточек в site/index.html.
 # yandex-samples — образцы голосов Яндекса (заодно проверка ключа).
 # samples — образцы бесплатных голосов Microsoft Edge.
 # all — переозвучить всё голосами Edge, включая Трошу (заменит голос ElevenLabs).
@@ -17,7 +19,7 @@ on:
       mode:
         description: "Что сделать"
         type: choice
-        options: ["yandex-narrator", "yandex-samples", "samples", "all"]
+        options: ["yandex-narrator", "site-facts", "yandex-samples", "samples", "all"]
         default: "yandex-narrator"
       yandex_voice:
         description: "Голос рассказчика Яндекса"
@@ -60,7 +62,7 @@ jobs:
       - run: pip install edge-tts soundfile numpy requests lameenc
 
       - name: Check Yandex key
-        if: startsWith(inputs.mode, 'yandex')
+        if: startsWith(inputs.mode, 'yandex') || inputs.mode == 'site-facts'
         env:
           YANDEX_SPEECHKIT_KEY: ${{ secrets.YANDEX_SPEECHKIT_KEY }}
         run: |
@@ -91,6 +93,23 @@ jobs:
           YANDEX_SPEECHKIT_KEY: ${{ secrets.YANDEX_SPEECHKIT_KEY }}
           VOICE: ${{ inputs.yandex_voice }}
         run: python3 tools/generate_audio.py --yandex-narrator "$VOICE" --yandex-role neutral
+
+      - name: Voice the site cards with Yandex
+        if: inputs.mode == 'site-facts'
+        env:
+          YANDEX_SPEECHKIT_KEY: ${{ secrets.YANDEX_SPEECHKIT_KEY }}
+          VOICE: ${{ inputs.yandex_voice }}
+        run: |
+          python3 tools/generate_audio.py --site-facts "$VOICE" --yandex-role neutral
+          git add site/audio
+          if git diff --cached --quiet; then
+            echo "Озвучка карточек не изменилась."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Voice-over: site cards"
+          git push
 
       - name: Voice everything with Edge
         if: inputs.mode == 'all'
