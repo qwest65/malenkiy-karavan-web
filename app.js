@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.7';
+const APP_VERSION = '1.8';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -881,11 +881,12 @@ setInterval(() => {
 
 /**
  * Как в навигаторе (KaravanMap.kt): карта следует за нами, повёрнута туда, куда идём, и чуть
- * наклонена. Сдвинули карту пальцем — слежение выключается и само возвращается через 5 секунд.
+ * наклонена. Сдвинули или повернули карту пальцами — слежение выключается и само возвращается
+ * через 8 секунд. Наклон пальцами выключен: детям он только мешает.
  */
 const FOLLOW_ZOOM = 17.5;
 const FOLLOW_PITCH = 40;
-const RESUME_FOLLOW_MS = 5000;
+const RESUME_FOLLOW_MS = 8000;
 const M = { map: null, ready: false, markers: [], me: null, following: true, fitted: false, resume: null, lastCam: 0 };
 
 const BLANK_STYLE = {
@@ -904,8 +905,7 @@ function ensureMap() {
     attributionControl: { compact: true },
     pitchWithRotate: false,
   });
-  M.map.dragRotate.disable();
-  M.map.touchZoomRotate.disableRotation();
+  M.map.touchPitch.disable();
   let fellBack = false;
   M.map.on('error', e => {
     // Нет интернета и тайлов в кэше — показываем линии и точки на простом фоне.
@@ -919,16 +919,19 @@ function ensureMap() {
     addLayers();
     drawMap();
   });
-  M.map.on('dragstart', () => {
+  const userMoves = () => {
     M.following = false;
     clearTimeout(M.resume);
     updateWalkView();
-  });
+  };
+  M.map.on('dragstart', userMoves);
+  M.map.on('rotatestart', e => { if (e.originalEvent) userMoves(); });
+  M.map.on('rotate', updateNorth);
   M.map.on('moveend', e => {
     // Карту отпустили — через несколько секунд она сама вернётся к нам.
     if (!M.following && (e.originalEvent || e.fit)) {
       clearTimeout(M.resume);
-      M.resume = setTimeout(follow, e.fit ? 8000 : RESUME_FOLLOW_MS);
+      M.resume = setTimeout(follow, RESUME_FOLLOW_MS);
     }
   });
 }
@@ -1048,6 +1051,24 @@ function fitAll() {
   const h = M.map.getContainer().clientHeight;
   const bottom = Math.min(440, Math.round(h * 0.5));
   M.map.fitBounds(b, { padding: { top: 170, bottom, left: 50, right: 50 }, maxZoom: 17, duration: 500, bearing: 0, pitch: 0 }, { fit: true });
+}
+
+/** Кнопка «север»: видна, пока карту повернули вручную; стрелка показывает, где север. */
+function updateNorth() {
+  const btn = document.getElementById('north-btn');
+  if (!btn || !M.map) return;
+  const bearing = M.map.getBearing();
+  btn.hidden = M.following || Math.abs(bearing) < 1;
+  btn.firstElementChild.style.transform = `rotate(${-bearing}deg)`;
+}
+
+function north() {
+  if (!M.map) return;
+  M.following = false;
+  clearTimeout(M.resume);
+  M.map.easeTo({ bearing: 0, duration: 400 });
+  M.resume = setTimeout(follow, RESUME_FOLLOW_MS);
+  updateWalkView();
 }
 
 function follow() {
@@ -1695,6 +1716,7 @@ function walkScreen() {
       <div class="bar">
         <button class="pill" data-act="pause">⏸ Пауза</button>
         <span style="flex:1"></span>
+        <button class="round north" data-act="north" id="north-btn" hidden aria-label="Повернуть карту на север"><span>▲<b>С</b></span></button>
         <button class="round" data-act="follow" id="follow-btn" ${M.following ? 'hidden' : ''}>🧭</button>
         <button class="round" data-act="fit">⤢</button>
       </div>
@@ -1797,6 +1819,7 @@ function updateWalkView() {
   }
   const fb = document.getElementById('follow-btn');
   if (fb) fb.hidden = M.following;
+  updateNorth();
   drawLive();
 }
 
@@ -1970,6 +1993,7 @@ $app.addEventListener('click', e => {
     case 'goPlan': startWalk(ed.plan); break;
     case 'pause': pause(); break;
     case 'follow': follow(); break;
+    case 'north': north(); break;
     case 'fit': fitAll(); updateWalkView(); break;
     case 'panel': S.panelOpen = !S.panelOpen; render(); break;
     case 'walkHint': toggleWalkHint(); break;
