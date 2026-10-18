@@ -3,7 +3,7 @@
  * сохраняется в телефоне. Кусочки карты запоминаются по мере просмотра.
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 const MAP_CACHE = 'karavan-map';
@@ -37,9 +37,11 @@ async function partial(response, range) {
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(APP_CACHE);
-    await cache.addAll(SHELL);
-    const files = await (await fetch('data/files.json')).json();
-    await cache.addAll(files);
+    // Мимо кэша браузера: GitHub Pages разрешает держать файлы 10 минут, и без этого
+    // в новую версию мог попасть старый app.js.
+    await cache.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })));
+    const files = await (await fetch('data/files.json', { cache: 'reload' })).json();
+    await cache.addAll(files.map(u => new Request(u, { cache: 'reload' })));
     await self.skipWaiting();
   })());
 });
