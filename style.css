@@ -236,3 +236,6 @@ body.walking #app > * { pointer-events: auto; }
 .quiet-hint .x { color: var(--muted); font-size: 16px; }
 .round.north span { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; color: var(--red); font-size: 16px; transition: transform .2s; }
 .round.north b { font-size: 12px; color: var(--ink); }
+.diploma-form { display: flex; flex-direction: column; gap: 12px; }
+.name-input { width: 100%; font: inherit; font-size: 20px; padding: 14px 16px; border-radius: 14px; border: 2px solid #e0a83a; background: #fff; color: var(--ink); }
+.name-input:focus { outline: none; border-color: var(--red); }
