@@ -188,6 +188,16 @@
     .route { position: relative; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 14px; }
     .route::before { content: ""; position: absolute; left: 5%; right: 5%; top: 62px; border-top: 5px dashed #9ad07a; z-index: 0; }
     .stop { position: relative; z-index: 1; text-decoration: none; text-align: center; }
+    button.stop { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+    /* Карта маршрута: та же подложка и пешеходные линии, что в прогулке. */
+    .route-map { height: 440px; margin-top: 30px; border-radius: 26px; overflow: hidden; border: 4px solid #fff; box-shadow: var(--shadow); background: #efe6d2; }
+    .route-map[hidden] { display: none; }
+    .map-pin { width: 54px; height: 54px; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.3); display: grid; place-items: center; position: relative; cursor: pointer; }
+    .map-pin img { width: 80%; height: 80%; object-fit: contain; }
+    .map-pin b { position: absolute; left: -8px; top: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 13px; display: grid; place-items: center; border: 2px solid #fff; }
+    .maplibregl-popup-content { border-radius: 16px; padding: 12px 16px; font-family: inherit; color: var(--ink); line-height: 1.35; }
+    .maplibregl-popup-content b { display: block; font-size: 1rem; }
+    @media (max-width: 640px) { .route-map { height: 360px; } }
     .circle {
       position: relative; width: 124px; max-width: 100%; aspect-ratio: 1; margin: 0 auto;
       border-radius: 50%; border: 6px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.15);
@@ -434,52 +444,53 @@
     <div class="panel">
       <div class="head">
         <h2><span>📍</span>Основной маршрут «Троша потерялся»</h2>
-        <a class="btn-green" href="https://www.openstreetmap.org/?mlat=54.0823&amp;mlon=61.5594#map=16/54.0823/61.5594" target="_blank" rel="noopener">🗺️ Посмотреть все точки на карте</a>
       </div>
-      <p class="lead">9 интересных остановок в исторической части Троицка</p>
+      <p class="lead" id="route-lead">9 интересных остановок в исторической части Троицка</p>
 
       <div class="route">
-        <a class="stop c1" href="https://www.openstreetmap.org/?mlat=54.077456&amp;mlon=61.556294#map=18/54.077456/61.556294" target="_blank" rel="noopener">
+        <button class="stop c1" type="button">
           <div class="circle"><span class="num">1</span><img src="../stickers/scroll.webp" alt=""></div>
           <div class="stop-name">Памятный камень Троицкой крепости</div><div class="stop-item">свиток с картой</div>
-        </a>
-        <a class="stop c2" href="https://www.openstreetmap.org/?mlat=54.077776&amp;mlon=61.557391#map=18/54.077776/61.557391" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c2" type="button">
           <div class="circle"><span class="num">2</span><img src="../stickers/bell.webp" alt=""></div>
           <div class="stop-name">Свято-Троицкий собор</div><div class="stop-item">колокольчик</div>
-        </a>
-        <a class="stop c3" href="https://www.openstreetmap.org/?mlat=54.081621&amp;mlon=61.561152#map=18/54.081621/61.561152" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c3" type="button">
           <div class="circle"><span class="num">3</span><img src="../stickers/blanket.webp" alt=""></div>
           <div class="stop-name">Бронзовый верблюд</div><div class="stop-item">попона</div>
-        </a>
-        <a class="stop c4" href="https://www.openstreetmap.org/?mlat=54.081813&amp;mlon=61.560374#map=18/54.081813/61.560374" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c4" type="button">
           <div class="circle"><span class="num">4</span><img src="../stickers/fabrics.webp" alt=""></div>
           <div class="stop-name">Торговые ряды</div><div class="stop-item">яркие ткани</div>
-        </a>
-        <a class="stop c5" href="https://www.openstreetmap.org/?mlat=54.082778&amp;mlon=61.559081#map=18/54.082778/61.559081" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c5" type="button">
           <div class="circle"><span class="num">5</span><img src="../stickers/gingerbread.webp" alt=""></div>
           <div class="stop-name">Центральная площадь</div><div class="stop-item">пряники</div>
-        </a>
-        <a class="stop c6" href="https://www.openstreetmap.org/?mlat=54.083458&amp;mlon=61.559628#map=18/54.083458/61.559628" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c6" type="button">
           <div class="circle"><span class="num">6</span><img src="../stickers/whistle.webp" alt=""></div>
           <div class="stop-name">Скульптура «Городовой»</div><div class="stop-item">свисток</div>
-        </a>
-        <a class="stop c7" href="https://www.openstreetmap.org/?mlat=54.083992&amp;mlon=61.559019#map=18/54.083992/61.559019" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c7" type="button">
           <div class="circle"><span class="num">7</span><img src="../stickers/key.webp" alt=""></div>
           <div class="stop-name">Гостиница «Центральная»</div><div class="stop-item">ключик</div>
-        </a>
-        <a class="stop c8" href="https://www.openstreetmap.org/?mlat=54.085255&amp;mlon=61.558237#map=18/54.085255/61.558237" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c8" type="button">
           <div class="circle"><span class="num">8</span><img src="../stickers/book.webp" alt=""></div>
           <div class="stop-name">Памятник Крылову и героям его басен</div><div class="stop-item">книжка басен</div>
-        </a>
-        <a class="stop c9" href="https://www.openstreetmap.org/?mlat=54.086813&amp;mlon=61.560445#map=18/54.086813/61.560445" target="_blank" rel="noopener">
+        </button>
+        <button class="stop c9" type="button">
           <div class="circle"><span class="num">9</span><img src="../stickers/tea.webp" alt=""></div>
           <div class="stop-name">Пассаж братьев Яушевых</div><div class="stop-item">восточный чай</div>
-        </a>
+        </button>
       </div>
 
+      <div class="route-map" id="route-map" aria-label="Карта маршрута"></div>
+
       <div class="route-facts">
-        <span class="chip">👣 около 1,7 км по улицам и скверам</span>
-        <span class="chip">⏱️ около 1,5 часа с остановками</span>
+        <span class="chip" id="route-km">👣 около 1,7 км по улицам и скверам</span>
+        <span class="chip" id="route-time">⏱️ около 1,5 часа с остановками</span>
         <span class="chip">🧩 можно собрать свой маршрут из любых точек</span>
       </div>
     </div>
@@ -714,6 +725,107 @@
         fact.play().then(function () { playing = c; c.classList.add('speaking'); }).catch(function () {});
       });
     });
+  })();
+  // Маршрут из тех же данных, что прогулка (data/*.json): цифры, точки и карта.
+  (function () {
+    var plural = function (n, one, few, many) {
+      var a = n % 100, b = n % 10;
+      return a >= 11 && a <= 14 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+    };
+    // Как в прогулке (app.js): детский шаг 50 м в минуту и 7 минут на точку.
+    var estimate = function (min) {
+      if (min < 55) return 'около ' + Math.max(5, Math.floor((min + 4) / 5) * 5) + ' мин';
+      if (min < 75) return 'около часа';
+      if (min < 105) return 'около 1,5 часа';
+      if (min < 135) return 'около 2 часов';
+      return 'около ' + String(Math.floor((min + 15) / 30) / 2).replace('.', ',') + ' часа';
+    };
+    var low = function (t) { return t.charAt(0).toLowerCase() + t.slice(1); };
+    // Те же цвета номеров, что у кружков в списке (.c1 … .c9).
+    var NUM_COLORS = ['#ff6a1f', '#f7b500', '#3db34a', '#1e88e5', '#8e44ad', '#ec407a', '#1aa39a', '#e53935', '#1e6fd9'];
+    var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    Promise.all([fetch('../data/route.json').then(function (r) { return r.json(); }),
+      fetch('../data/paths.json').then(function (r) { return r.json(); })]).then(function (res) {
+      var route = res[0], paths = res[1], order = route.default_order;
+      var legs = {};
+      paths.legs.forEach(function (l) {
+        legs[l.from + '-' + l.to] = l;
+        legs[l.to + '-' + l.from] = { meters: l.meters, points: l.points.slice().reverse() };
+      });
+      var meters = 0, line = [];
+      for (var k = 0; k < order.length - 1; k++) {
+        var leg = legs[order[k] + '-' + order[k + 1]];
+        if (leg) { meters += leg.meters; line = line.concat(leg.points); }
+      }
+      var n = order.length;
+      document.getElementById('route-lead').textContent = n + ' ' + plural(n, 'интересная остановка', 'интересные остановки', 'интересных остановок') + ' в исторической части Троицка';
+      document.getElementById('route-km').textContent = '👣 около ' + (meters / 1000).toFixed(1).replace('.', ',') + ' км по улицам и скверам';
+      document.getElementById('route-time').textContent = '⏱️ ' + estimate(Math.round(meters / 50) + n * 7) + ' с остановками';
+      var list = document.querySelector('.route');
+      list.innerHTML = order.map(function (i, k) {
+        var s = route.stops[i];
+        return '<button class="stop c' + (k % 9 + 1) + '" type="button" data-k="' + k + '">' +
+          '<div class="circle"><span class="num">' + (k + 1) + '</span><img src="../stickers/' + s.sticker + '.webp" alt=""></div>' +
+          '<div class="stop-name">' + esc(s.title) + '</div><div class="stop-item">' + esc(low(s.item)) + '</div></button>';
+      }).join('');
+      initMap(route, order, line);
+    }).catch(function () { /* без данных остаётся список из разметки */ });
+
+    // Карта грузится, только когда до неё долистали.
+    function initMap(route, order, line) {
+      var box = document.getElementById('route-map'), map = null, markers = [];
+      function load(src, tag) {
+        return new Promise(function (ok, fail) {
+          var el = document.createElement(tag);
+          if (tag === 'link') { el.rel = 'stylesheet'; el.href = src; } else { el.src = src; }
+          el.onload = ok; el.onerror = fail; document.head.appendChild(el);
+        });
+      }
+      function start() {
+        Promise.all([load('../vendor/maplibre-gl.css', 'link'), load('../vendor/maplibre-gl.js', 'script')]).then(function () {
+          var pts = order.map(function (i) { return [route.stops[i].lon, route.stops[i].lat]; });
+          var bounds = pts.reduce(function (b, p) { return b.extend(p); }, new maplibregl.LngLatBounds(pts[0], pts[0]));
+          map = new maplibregl.Map({
+            container: box, style: 'https://tiles.openfreemap.org/styles/liberty', bounds: bounds,
+            fitBoundsOptions: { padding: 60 }, attributionControl: { compact: true },
+            cooperativeGestures: true, dragRotate: false, pitchWithRotate: false,
+            locale: {
+              'CooperativeGesturesHandler.WindowsHelpText': 'Чтобы приблизить, крутите колёсико с зажатой Ctrl',
+              'CooperativeGesturesHandler.MacHelpText': 'Чтобы приблизить, крутите колёсико с зажатой ⌘',
+              'CooperativeGesturesHandler.MobileHelpText': 'Двигайте карту двумя пальцами',
+            },
+          });
+          map.on('error', function (e) { if (!map.loaded() && /style|fetch|network|load/i.test(String(e.error && e.error.message))) box.hidden = true; });
+          map.on('load', function () {
+            map.addSource('plan', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: line } } });
+            map.addLayer({ id: 'plan', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' },
+              paint: { 'line-color': '#d2463c', 'line-width': 5, 'line-opacity': 0.75, 'line-dasharray': [1, 1.6] } });
+          });
+          order.forEach(function (i, k) {
+            var s = route.stops[i], el = document.createElement('div');
+            el.className = 'map-pin';
+            el.innerHTML = '<img src="../stickers/' + s.sticker + '.webp" alt=""><b style="background:' + NUM_COLORS[k % 9] + '">' + (k + 1) + '</b>';
+            markers.push(new maplibregl.Marker({ element: el }).setLngLat([s.lon, s.lat])
+              .setPopup(new maplibregl.Popup({ offset: 30, closeButton: false })
+                .setHTML('<b>' + (k + 1) + '. ' + esc(s.title) + '</b>Здесь Троша найдёт: ' + esc(low(s.item))))
+              .addTo(map));
+          });
+        }).catch(function () { box.hidden = true; });
+      }
+      // Нажали на точку в списке — карта перелетает к ней и показывает подпись.
+      document.querySelector('.route').addEventListener('click', function (e) {
+        var b = e.target.closest('.stop[data-k]');
+        if (!b || !map) return;
+        var s = route.stops[order[+b.dataset.k]];
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        map.flyTo({ center: [s.lon, s.lat], zoom: 17 });
+        markers.forEach(function (m, k) { if (m.getPopup().isOpen() !== (k === +b.dataset.k)) m.togglePopup(); });
+      });
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); start(); } }, { rootMargin: '300px' });
+        io.observe(box);
+      } else { start(); }
+    }
   })();
   (function () {
     var box = document.getElementById('contacts-box');

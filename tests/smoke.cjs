@@ -114,6 +114,12 @@ const check = (ok, what) => { console.log(`${ok ? '✓' : '✗'} ${what}`); if (
     check(broken.length === 0, `на сайте все картинки на месте${broken.length ? ': ' + broken.join(', ') : ''}`);
     check(await site.evaluate(() => document.querySelectorAll('.flip').length) > 0, 'на сайте есть карточки «Знаешь ли ты?»');
     check(await site.getAttribute('a.download', 'href') === '../', 'кнопка «Начать прогулку» ведёт на прогулку');
+    const routeInfo = await site.evaluate(async () => {
+      const r = await (await fetch('../data/route.json')).json();
+      return { want: r.default_order.length, got: document.querySelectorAll('.route .stop[data-k]').length, lead: document.getElementById('route-lead').textContent };
+    });
+    check(routeInfo.got === routeInfo.want && routeInfo.lead.startsWith(String(routeInfo.want)),
+      `точки маршрута на сайте взяты из данных (${routeInfo.got} из ${routeInfo.want})`);
     check(siteErrors.length === 0, `сайт без ошибок${siteErrors.length ? ': ' + siteErrors.join('; ') : ''}`);
   } finally {
     await browser.close();
