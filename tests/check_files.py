@@ -49,6 +49,8 @@ if paths.get("route") != route["id"]:
 
 site = (ROOT / "site/index.html").read_text(encoding="utf-8")
 for ref in re.findall(r'(?:src|href)="([^"#:]+)"', site):
+    if "'" in ref or "+" in ref:  # адрес, который собирает скрипт страницы
+        continue
     target = os.path.normpath(os.path.join("site", ref))
     need(target + "/index.html" if ref.endswith("/") else target, f"ссылка {ref} на сайте проекта")
 flips = len(re.findall(r'class="flip ', site))
