@@ -280,7 +280,7 @@ def generate_yandex_narrator(route, voice, role):
 def site_facts():
     """Ответы с карточек «Знаешь ли ты?» на сайте проекта — по порядку карточек."""
     page = (SITE / "index.html").read_text(encoding="utf-8")
-    backs = re.findall(r'<span class="side back">(?:<img[^>]*>)?<span>(.*?)</span></span>', page, re.S)
+    backs = re.findall(r'<span class="side back">(?:<span class="fact-pic">.*?</span>)?<span>(.*?)</span></span>', page, re.S)
     return [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", b)).strip() for b in backs]
 
 
