@@ -78,6 +78,7 @@
 | `tools/build_streets.py` | Строит пешеходные линии и улицы из OpenStreetMap (workflow «Walking paths») |
 | `tools/generate_audio.py` | Озвучка рассказчика Яндекс SpeechKit (workflow «Voice») |
 | `tools/update_files.py` | Список наклеек и озвучки для работы без интернета (`data/files.json`) |
+| `tests/` | Проверка перед выкладкой (workflow «Checks») |
 
 ## Главный дом проекта
 
@@ -119,6 +120,21 @@ Actions → **Voice** → Run workflow → `yandex-narrator`. Workflow пере�
 **Троша** озвучен в ElevenLabs отдельно: новые реплики записывают там и кладут MP3 в `audio/`
 под тем же именем (`stopN_trosha.mp3`, `phrase_….mp3`), затем `python3 tools/update_files.py`
 и увеличить `VERSION`.
+
+## Проверка перед выкладкой
+
+На каждый pull request в `main` GitHub сам запускает workflow **Checks**:
+- `tests/check_files.py` — данные читаются, а всё, что сохраняется в телефон для работы без интернета,
+  и всё, на что ссылаются маршрут и сайт проекта, на месте;
+- `tests/smoke.cjs` — в настоящем браузере открывается прогулка, стартует маршрут, сворачивается панель,
+  открывается точка, коллаж (и грамота) собираются на лист A4, сайт проекта грузится без ошибок.
+
+Красный крестик у pull request — значит, сливать нельзя, пока не исправлено. Запустить у себя:
+
+```bash
+python3 tests/check_files.py
+npm install --no-save playwright && npx playwright install chromium && node tests/smoke.cjs
+```
 
 ## Публикация
 
