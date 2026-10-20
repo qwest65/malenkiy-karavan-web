@@ -1,0 +1,36 @@
+name: Checks
+
+# Проверка перед выкладкой: на каждый pull request в main и на каждый push в main.
+# 1) файлы на месте и данные читаются (tests/check_files.py);
+# 2) прогулка и сайт проекта открываются в настоящем браузере без ошибок (tests/smoke.cjs).
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JavaScript без синтаксических ошибок
+        run: |
+          node --check app.js
+          node --check sw.js
+
+      - name: Файлы и данные на месте
+        run: python3 tests/check_files.py
+
+      - name: Браузер для проверки
+        run: |
+          npm install --no-save --no-package-lock playwright@1.48.2
+          npx playwright install --with-deps chromium
+
+      - name: Прогулка и сайт в браузере
+        run: node tests/smoke.cjs
