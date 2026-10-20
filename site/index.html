@@ -128,6 +128,16 @@
     .download svg { width: 34px; height: 34px; fill: #fff; }
     .download-note { margin-top: 18px; font-weight: 600; color: var(--brown); font-size: 0.95rem; line-height: 1.5; }
     .download-note a { color: inherit; }
+    .rustore {
+      display: inline-flex; align-items: center; gap: 10px; margin-top: 12px; text-decoration: none;
+      background: #222; color: #fff; font-weight: 800; font-size: 1.05rem; padding: 10px 20px 10px 12px;
+      border-radius: 14px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,0.25);
+    }
+    .download-note .rustore, .rustore { color: #fff; }
+    .rustore:hover { transform: translateY(-1px); }
+    .rustore .mark { width: 32px; height: 32px; border-radius: 9px; background: #0077ff; display: grid; place-items: center; font-weight: 900; font-size: 1rem; }
+    .rustore small { display: block; font-weight: 600; font-size: 0.72rem; opacity: 0.8; line-height: 1.1; }
+    .download-note .apk { font-size: 0.85rem; opacity: 0.8; }
     /* QR-код на прогулку — только на компьютере: телефоном свой же экран не отсканировать. */
     .qr-card {
       display: none; align-items: center; gap: 16px; margin-top: 22px; padding: 12px 18px 12px 12px;
@@ -412,7 +422,9 @@
         <a class="download" href="../">🐫 Начать прогулку</a>
       </div>
       <div class="download-note">Прямо в браузере телефона — iPhone и Android, без установки · бесплатно · без рекламы<br>
-        Для Android есть и приложение: <a href="https://github.com/qwest65/malenkiy-karavan/releases/latest/download/MalenkiyKaravan.apk">скачать APK</a></div>
+        Для Android есть и приложение:<br>
+        <a class="rustore" href="https://www.rustore.ru/catalog/app/ru.malenkiykaravan" target="_blank" rel="noopener"><span class="mark">RS</span><span><small>Скачать в</small>RuStore</span></a><br>
+        <span class="apk">или <a href="https://github.com/qwest65/malenkiy-karavan/releases/latest/download/MalenkiyKaravan.apk">скачать APK напрямую</a></span></div>
       <div class="qr-card">
         <img src="../images/qr.png" alt="QR-код: прогулка «Маленький караван»">
         <span>📱 Открыли на компьютере? Наведите камеру телефона — прогулка откроется сразу.</span>
@@ -529,7 +541,7 @@
         </div>
       </div>
       <div class="steps">
-        <div class="step"><div class="big">📲</div><b>Скачайте</b>приложение на телефон с Android</div>
+        <div class="step"><div class="big">📲</div><b>Откройте прогулку</b>по ссылке в браузере или скачайте приложение для Android в <a href="https://www.rustore.ru/catalog/app/ru.malenkiykaravan" target="_blank" rel="noopener">RuStore</a></div>
         <div class="step"><div class="big">🗺️</div><b>Выберите маршрут</b>весь, короткий или свой из любых точек</div>
         <div class="step"><div class="big">🚶‍♀️</div><b>Идите за Трошей</b>карта ведёт как навигатор, Троша подсказывает повороты</div>
         <div class="step"><div class="big">📸</div><b>Собирайте находки</b>наклейки, фото и коллаж на память</div>
@@ -659,7 +671,7 @@
       <p class="lead">Коротко о главном</p>
       <details><summary>💰 Сколько стоит приложение?</summary><p>Нисколько. Приложение бесплатное, без рекламы и без покупок внутри.</p></details>
       <details><summary>📶 Нужен ли интернет?</summary><p>Только чтобы первый раз открыть прогулку: озвучка и пешеходные маршруты сразу сохраняются в телефон, дальше прогулка работает и без интернета, а прибытие на точку определяется по GPS.</p></details>
-      <details><summary>📱 На каком телефоне работает?</summary><p>На любом современном телефоне — iPhone и Android: прогулка открывается прямо в браузере, в том числе из Telegram и MAX, и её можно поставить иконкой на экран «Домой». Для Android 8.0 и новее есть и отдельное приложение.</p></details>
+      <details><summary>📱 На каком телефоне работает?</summary><p>На любом современном телефоне — iPhone и Android: прогулка открывается прямо в браузере, в том числе из Telegram и MAX, и её можно поставить иконкой на экран «Домой». Для Android 8.0 и новее есть и отдельное приложение — в <a href="https://www.rustore.ru/catalog/app/ru.malenkiykaravan" target="_blank" rel="noopener">RuStore</a>.</p></details>
       <details><summary>⏸️ Можно ли прерваться и продолжить потом?</summary><p>Да. Прогулку можно поставить на паузу, пропустить точку или завершить в любой момент — найденные вещи останутся в альбоме.</p></details>
       <details><summary>🧒 Для какого возраста?</summary><p>Для детей 4–7 лет вместе со взрослыми. Старшим детям и родителям тоже интересно: для взрослых на каждой точке есть историческая справка.</p></details>
       <details><summary>🔒 Собирает ли приложение данные?</summary><p>Нет. Регистрации нет, фото хранятся только на вашем телефоне. Подробнее — в <a href="privacy.html">политике конфиденциальности</a>.</p></details>
