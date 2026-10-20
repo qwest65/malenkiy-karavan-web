@@ -80,6 +80,25 @@ const check = (ok, what) => { console.log(`${ok ? '✓' : '✗'} ${what}`); if (
       check(d === '1654x2339', `грамота — лист A4 (${d})`);
     }
 
+    // Грамота: финальный экран → имя → грамота; в альбоме её можно исправить
+    if (await page.evaluate(() => typeof renderDiploma === 'function')) {
+      await page.evaluate(() => {
+        setJourney({ ...S.journey, found: route.default_order.slice(), badge: true });
+        S.result = { complete: true, found: route.default_order.slice() };
+        go('finale');
+      });
+      await page.fill('#child-name', 'Маша Сердюкова');
+      await page.click('[data-act="diploma"]');
+      await page.waitForSelector('img[alt^="Грамота"]', { timeout: 10000 }).catch(() => {});
+      check(await page.isVisible('img[alt^="Грамота: Маша Сердюкова"]'), 'на финальном экране грамота с введённым именем');
+      await page.evaluate(() => go('album'));
+      await page.click('[data-act="editName"]');
+      await page.fill('#child-name', 'Маша Иванова');
+      await page.click('[data-act="diploma"]');
+      await page.waitForSelector('img[alt^="Грамота: Маша Иванова"]', { timeout: 10000 }).catch(() => {});
+      check(await page.isVisible('img[alt^="Грамота: Маша Иванова"]'), 'в альбоме имя на грамоте можно исправить');
+    }
+
     check(errors.length === 0, `прогулка без ошибок${errors.length ? ': ' + errors.join('; ') : ''}`);
 
     // Сайт проекта

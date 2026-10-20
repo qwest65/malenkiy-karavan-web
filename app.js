@@ -6,10 +6,11 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.11';
+const APP_VERSION = '1.12';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
+const DIPLOMA_KEY = 'karavan.diploma';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 /** Радиус прибытия по умолчанию, м. */
@@ -1305,6 +1306,8 @@ function endWalk(complete) {
   stopTracking();
   go('finale');
   if (complete) player.play('bell', 'finale_trosha'); else player.play('phrase_later');
+  // Имя уже вписывали после прошлой прогулки — грамота с новыми находками готова сразу.
+  if (complete) Diploma.refresh().then(() => { if (S.screen === 'finale') render(); });
   if (complete && !S.celebrated.has(-1)) {
     S.celebrated.add(-1);
     celebrate(route.badge, 'Ура!', 'Ты — Юный караванщик!');
@@ -1321,6 +1324,7 @@ async function resetAlbum() {
   player.stop();
   setJourney(newJourney());
   await Photos.clear();
+  Diploma.clear();
   go('home');
 }
 
@@ -1629,21 +1633,159 @@ function wrapText(g, text, cx, y, maxW, lineH, maxLines) {
   lines.forEach((l, k) => g.fillText(l, cx, y + k * lineH));
 }
 
-/** Поделиться коллажем: меню iPhone/Android «Сохранить изображение», мессенджеры; иначе — скачать файл. */
-async function shareCollage() {
-  const blob = Photos.collageBlob;
+/** Поделиться картинкой: меню iPhone/Android «Сохранить изображение», мессенджеры; иначе — скачать файл. */
+async function shareImage(blob, url, filename) {
   if (!blob) return;
-  const file = new File([blob], 'malenkiy-karavan.jpg', { type: 'image/jpeg' });
+  const file = new File([blob], filename, { type: 'image/jpeg' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], title: 'Маленький караван' }); } catch (_) { /* отменили */ }
     return;
   }
   const a = document.createElement('a');
-  a.href = Photos.collageUrl;
-  a.download = 'malenkiy-karavan.jpg';
+  a.href = url;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+const shareCollage = () => shareImage(Photos.collageBlob, Photos.collageUrl, 'malenkiy-karavan.jpg');
+
+/* ================= Грамота ================= */
+
+/**
+ * Грамота «Юный караванщик» на лист A4 — за прогулку, пройденную до конца. Имя и фамилию
+ * вписывают на финальном экране или в альбоме; они хранятся только в телефоне (localStorage).
+ */
+const Diploma = {
+  blob: null,
+  url: null,
+  editing: false,
+  load() {
+    try { return JSON.parse(localStorage.getItem(DIPLOMA_KEY)) || null; } catch (_) { return null; }
+  },
+  save(d) {
+    try { localStorage.setItem(DIPLOMA_KEY, JSON.stringify(d)); } catch (_) { /* нет хранилища */ }
+  },
+  clear() {
+    try { localStorage.removeItem(DIPLOMA_KEY); } catch (_) { /* нет хранилища */ }
+    if (this.url) URL.revokeObjectURL(this.url);
+    this.blob = this.url = null;
+  },
+  async refresh() {
+    const d = this.load();
+    if (!d || !S.journey.badge) return;
+    const found = route.default_order.filter(i => S.journey.found.includes(i));
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const blob = await renderDiploma(d.name, found, new Date(d.date));
+      if (this.url) URL.revokeObjectURL(this.url);
+      this.blob = blob;
+      this.url = URL.createObjectURL(blob);
+    } catch (_) { /* без грамоты */ }
+  },
+};
+
+async function makeDiploma() {
+  const input = document.getElementById('child-name');
+  const name = (input ? input.value : '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  if (!name) { toast('Впишите имя и фамилию юного караванщика'); if (input) input.focus(); return; }
+  const old = Diploma.load();
+  Diploma.save({ name, date: old ? old.date : new Date().toISOString() });
+  Diploma.editing = false;
+  await Diploma.refresh();
+  render();
+}
+
+function diplomaPanel() {
+  if (!S.journey.badge) return '';
+  const d = Diploma.load();
+  if (!d || Diploma.editing) {
+    return `<div class="panel gold diploma-form">
+      <div class="bold" style="font-size:20px">🏅 Грамота юного караванщика</div>
+      <label for="child-name" style="font-size:16px">Как зовут юного караванщика? Имя попадёт в грамоту и останется только в этом телефоне.</label>
+      <input id="child-name" class="name-input" type="text" maxlength="40" autocomplete="off" placeholder="Имя и фамилия" value="${esc(d ? d.name : '')}">
+      <button class="btn" data-act="diploma">${d ? 'Исправить грамоту' : 'Получить грамоту'}</button>
+    </div>`;
+  }
+  return `<div class="panel">
+    <div class="bold" style="font-size:20px">🏅 Грамота юного караванщика</div>
+    ${Diploma.url ? `<img class="collage" src="${Diploma.url}" alt="Грамота: ${esc(d.name)} — Юный караванщик">` : '<div class="muted">Готовим грамоту…</div>'}
+    <button class="btn soft" data-act="shareDiploma">Поделиться или сохранить</button>
+    <button class="link" data-act="editName">Исправить имя</button>
+  </div>`;
+}
+
+/** Строка по центру, которая сама уменьшается, если не помещается в [maxW]. */
+function fitText(g, text, x, y, maxW, size, weight, font) {
+  let s = size;
+  do { g.font = font(s, weight); s -= 4; } while (g.measureText(text).width > maxW && s > 24);
+  g.fillText(text, x, y);
+}
+
+async function renderDiploma(name, found, date) {
+  const W = 1654, H = 2339, M = 70;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  // Старые iPhone (до iOS 16) не умеют скруглённые прямоугольники — там будут прямые углы.
+  if (!g.roundRect) g.roundRect = (x, y, w, h) => g.rect(x, y, w, h);
+  const font = (size, bold) => `${bold ? 800 : 500} ${size}px Rubik, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  const fit = (img, x, y, w, h) => {
+    const k = Math.min(w / img.naturalWidth, h / img.naturalHeight);
+    const dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+    g.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  };
+  const frame = (inset, color, width) => {
+    g.strokeStyle = color; g.lineWidth = width;
+    g.beginPath(); g.roundRect(inset, inset, W - 2 * inset, H - 2 * inset, 40); g.stroke();
+  };
+  // Крафтовый лист с двойной рамкой — как в альбоме.
+  g.fillStyle = '#e8d3b0'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#fdf6e7'; g.beginPath(); g.roundRect(M, M, W - 2 * M, H - 2 * M, 40); g.fill();
+  frame(M + 22, '#d2463c', 10);
+  frame(M + 46, '#e0a83a', 4);
+
+  g.textAlign = 'center';
+  g.fillStyle = '#d2463c'; g.font = font(170, true);
+  g.fillText('ГРАМОТА', W / 2, 360);
+  g.fillStyle = '#7a6150'; g.font = font(54);
+  g.fillText('Маленький караван · прогулка по Троицку', W / 2, 450);
+  g.fillStyle = '#3b2415'; g.font = font(60);
+  g.fillText('награждается', W / 2, 600);
+  g.fillStyle = '#3b2415';
+  fitText(g, name, W / 2, 750, W - 2 * M - 220, 120, true, font);
+  g.strokeStyle = '#e0a83a'; g.lineWidth = 4;
+  g.beginPath(); g.moveTo(320, 790); g.lineTo(W - 320, 790); g.stroke();
+  g.fillStyle = '#3b2415'; g.font = font(52);
+  wrapText(g, `за прогулку «${route.title}» по историческому центру Троицка и помощь верблюжонку Троше в поисках пропавших вещей`,
+    W / 2, 880, W - 2 * M - 260, 68, 4);
+
+  const [badge, trosha, ...items] = await Promise.all([
+    loadImage(`stickers/${route.badge}.webp`).catch(() => null),
+    loadImage('stickers/trosha.webp').catch(() => null),
+    ...found.map(i => loadImage(`stickers/${route.stops[i].sticker}.webp`).catch(() => null)),
+  ]);
+  if (badge) fit(badge, (W - 520) / 2, 1110, 520, 520);
+  g.fillStyle = '#d2463c'; g.font = font(96, true);
+  g.fillText('Юный караванщик', W / 2, 1750);
+
+  // Найденные вещи — в ряд по центру.
+  const got = items.filter(Boolean);
+  const size = Math.min(120, (W - 2 * M - 200) / Math.max(got.length, 1) - 12);
+  const rowW = got.length * (size + 12) - 12;
+  got.forEach((img, k) => fit(img, (W - rowW) / 2 + k * (size + 12), 1790, size, size));
+
+  // Внизу: дата слева, Троша с подписью справа — внутри рамки.
+  const footY = H - M - 110;
+  g.textAlign = 'left'; g.fillStyle = '#3b2415'; g.font = font(46);
+  g.fillText(new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(date), M + 110, footY);
+  g.strokeStyle = '#7a6150'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(M + 110, footY + 20); g.lineTo(M + 560, footY + 20); g.stroke();
+  if (trosha) fit(trosha, W - M - 330, footY - 230, 190, 190);
+  g.textAlign = 'right'; g.fillStyle = '#3b2415'; g.font = font(42, true);
+  g.fillText('Верблюжонок Троша', W - M - 110, footY + 10);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
 }
 
 /* ================= Экраны ================= */
@@ -2003,6 +2145,7 @@ function finaleScreen() {
         <div class="stickers">${r.found.map(i => sticker(route.stops[i].sticker, '', 56)).join('')}</div>`
       : '<div class="muted" style="font-size:17px">Сегодня ничего не нашли</div>'}
     </div>
+    ${r.complete ? diplomaPanel() : ''}
     <button class="btn" data-act="album">Мой альбом</button>
     <button class="btn soft" data-act="home">На главную</button>
   </div>`;
@@ -2020,6 +2163,7 @@ function albumScreen() {
         <button class="btn soft" data-act="share">Поделиться или сохранить</button>
       </div>`
     : j.found.length ? `<div class="panel gold"><p style="font-size:16px">Добавьте фото ещё к ${photosMissing()} ${findsWord(photosMissing())} — и коллаж соберётся сам.</p></div>` : ''}
+    ${diplomaPanel()}
     <div class="album">
       ${route.stops.map((s, i) => {
         const found = J.isFound(i);
@@ -2119,6 +2263,9 @@ $app.addEventListener('click', e => {
     case 'camera': pickPhoto(+d.stop, true); break;
     case 'gallery': pickPhoto(+d.stop, false); break;
     case 'share': shareCollage(); break;
+    case 'diploma': makeDiploma(); break;
+    case 'shareDiploma': shareImage(Diploma.blob, Diploma.url, 'yunyy-karavanshchik.jpg'); break;
+    case 'editName': Diploma.editing = true; render(); setTimeout(() => { const i = document.getElementById('child-name'); if (i) i.focus(); }, 0); break;
     case 'hideHint': try { localStorage.setItem(HINT_KEY, 'hidden'); } catch (_) { /* нет хранилища */ } render(); break;
     case 'about': ask(`Веб-версия ${APP_VERSION}`, `Браузер: ${navigator.userAgent}${GEO_DIAG.error ? `\nГеопозиция: ${GEO_DIAG.error}` : ''}`, 'Понятно', 'Закрыть'); break;
     case 'install': if (installEvent) { installEvent.prompt(); installEvent = null; render(); } break;
@@ -2163,6 +2310,7 @@ async function boot() {
   S.journey = loadJourney();
   try { localStorage.setItem(OPENS_KEY, String((+localStorage.getItem(OPENS_KEY) || 0) + 1)); } catch (_) { /* нет хранилища */ }
   await Photos.load();
+  Diploma.refresh().then(() => { if (S.screen === 'album' || S.screen === 'finale') render(); });
   history.replaceState({ inner: false }, '');
   render();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
