@@ -296,8 +296,8 @@
 
     /* Знаешь ли ты? — карточки-перевёртыши */
     .flips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .flip { display: block; width: 100%; perspective: 900px; min-height: 400px; cursor: pointer; border: 0; padding: 0; background: none; font: inherit; text-align: center; }
-    .flip .in { display: block; position: relative; width: 100%; height: 100%; min-height: 400px; transition: transform .55s; transform-style: preserve-3d; }
+    .flip { display: block; width: 100%; perspective: 900px; min-height: 210px; cursor: pointer; border: 0; padding: 0; background: none; font: inherit; text-align: center; }
+    .flip .in { display: block; position: relative; width: 100%; height: 100%; min-height: 210px; transition: transform .55s; transform-style: preserve-3d; }
     .flip.open .in { transform: rotateY(180deg); }
     .flip .side {
       position: absolute; inset: 0; backface-visibility: hidden; border-radius: 26px; padding: 22px;
@@ -309,12 +309,19 @@
     .flip .front small { font-weight: 600; font-size: 0.85rem; opacity: 0.8; }
     .flip .back { background: #fff; border: 4px solid var(--bg); color: var(--ink); font-weight: 600; line-height: 1.45; transform: rotateY(180deg); }
     .flip .back b { color: var(--fg); }
-    /* Оборот с фото места: фото целиком сверху (по бокам — его размытая копия), ответ снизу. */
-    .flip .back:has(.fact-pic) { padding: 0; gap: 0; overflow: hidden; justify-content: flex-start; }
-    .flip .fact-pic { position: relative; width: 100%; height: 66%; flex: none; overflow: hidden; background: #3b2415; }
-    .flip .fact-pic img { position: relative; width: 100%; height: 100%; object-fit: contain; display: block; }
-    .flip .fact-pic img.blur { position: absolute; inset: 0; object-fit: cover; filter: blur(16px) brightness(.85); transform: scale(1.2); }
-    .flip .back:has(.fact-pic) > span:last-child { display: block; margin: auto 0; padding: 10px 16px; font-size: 0.95rem; }
+    /* Карточки вертикальные, как фото (3:4): на обороте фото на всю карточку, ответ внизу на затемнении. */
+    .flip, .flip .in { min-height: 0; }
+    .flip { aspect-ratio: 3 / 4; }
+    .flip .in { height: 100%; }
+    .flip .back:has(.fact-pic) { padding: 0; gap: 0; overflow: hidden; justify-content: flex-end; }
+    .flip .fact-pic { position: absolute; inset: 0; }
+    .flip .fact-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .flip .back:has(.fact-pic) > span:last-child {
+      position: relative; display: block; padding: 70px 18px 20px; font-size: 0.98rem; color: #fff;
+      background: linear-gradient(to bottom, rgba(40,20,8,0), rgba(40,20,8,.78) 45%, rgba(40,20,8,.88));
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+    .flip .back:has(.fact-pic) b { color: #ffd36b; }
     /* Пока диктор читает ответ — значок динамика в углу карточки. */
     .flip .back::after { content: '🔊'; position: absolute; top: 8px; right: 10px; font-size: 1rem; opacity: 0; transition: opacity .2s; }
     .flip.speaking .back::after { opacity: 1; }
@@ -539,37 +546,37 @@
         <button class="flip q1" type="button" aria-pressed="false">
           <span class="in">
             <span class="side front"><img src="../stickers/blanket.webp" alt="">Почему на гербе Троицка — верблюд?<small>нажми, чтобы узнать</small></span>
-            <span class="side back"><span class="fact-pic"><img class="blur" src="images/facts/fact1.jpg" alt="" loading="lazy"><img src="images/facts/fact1.jpg" alt="" loading="lazy"></span><span>Давным-давно в Троицк приходили <b>караваны верблюдов</b> из Бухары, Хивы и Ташкента. Они везли ткани, ковры и сладости на большую ярмарку.</span></span>
+            <span class="side back"><span class="fact-pic"><img src="images/facts/fact1.jpg" alt="" loading="lazy"></span><span>Давным-давно в Троицк приходили <b>караваны верблюдов</b> из Бухары, Хивы и Ташкента. Они везли ткани, ковры и сладости на большую ярмарку.</span></span>
           </span>
         </button>
         <button class="flip q2" type="button" aria-pressed="false">
           <span class="in">
             <span class="side front"><img src="../stickers/scroll.webp" alt="">Сколько лет Троицку?<small>нажми, чтобы узнать</small></span>
-            <span class="side back"><span class="fact-pic"><img class="blur" src="images/facts/fact2.jpg" alt="" loading="lazy"><img src="images/facts/fact2.jpg" alt="" loading="lazy"></span><span>Город вырос из крепости, которую построили <b>22 мая 1743 года</b> там, где встречаются реки Уй и Увелька. Это почти 300 лет назад!</span></span>
+            <span class="side back"><span class="fact-pic"><img src="images/facts/fact2.jpg" alt="" loading="lazy"></span><span>Город вырос из крепости, которую построили <b>22 мая 1743 года</b> там, где встречаются реки Уй и Увелька. Это почти 300 лет назад!</span></span>
           </span>
         </button>
         <button class="flip q3" type="button" aria-pressed="false">
           <span class="in">
             <span class="side front"><img src="../stickers/tea.webp" alt="">Какое чудо было в пассаже Яушевых?<small>нажми, чтобы узнать</small></span>
-            <span class="side back"><span class="fact-pic"><img class="blur" src="images/facts/fact3.jpg" alt="" loading="lazy"><img src="images/facts/fact3.jpg" alt="" loading="lazy"></span><span>Больше ста лет назад там были <b>лифт, телефон и электрические лампочки</b>. Тогда это было как в сказке!</span></span>
+            <span class="side back"><span class="fact-pic"><img src="images/facts/fact3.jpg" alt="" loading="lazy"></span><span>Больше ста лет назад там были <b>лифт, телефон и электрические лампочки</b>. Тогда это было как в сказке!</span></span>
           </span>
         </button>
         <button class="flip q4" type="button" aria-pressed="false">
           <span class="in">
             <span class="side front"><img src="../stickers/whistle.webp" alt="">Кто такой городовой?<small>нажми, чтобы узнать</small></span>
-            <span class="side back"><span class="fact-pic"><img class="blur" src="images/facts/fact4.jpg" alt="" loading="lazy"><img src="images/facts/fact4.jpg" alt="" loading="lazy"></span><span>Так раньше называли <b>полицейского</b>. Он стоял на улице, следил за порядком и помогал найти дорогу.</span></span>
+            <span class="side back"><span class="fact-pic"><img src="images/facts/fact4.jpg" alt="" loading="lazy"></span><span>Так раньше называли <b>полицейского</b>. Он стоял на улице, следил за порядком и помогал найти дорогу.</span></span>
           </span>
         </button>
         <button class="flip q5" type="button" aria-pressed="false">
           <span class="in">
             <span class="side front"><img src="../stickers/key.webp" alt="">Как купец выиграл спор?<small>нажми, чтобы узнать</small></span>
-            <span class="side back"><span class="fact-pic"><img class="blur" src="images/facts/fact5.jpg" alt="" loading="lazy"><img src="images/facts/fact5.jpg" alt="" loading="lazy"></span><span>Купец Башкиров поспорил, что в Троицке есть самая лучшая гостиница. А её ещё не было! Тогда он <b>быстро построил её</b> — и выиграл.</span></span>
+            <span class="side back"><span class="fact-pic"><img src="images/facts/fact5.jpg" alt="" loading="lazy"></span><span>Купец Башкиров поспорил, что в Троицке есть самая лучшая гостиница. А её ещё не было! Тогда он <b>быстро построил её</b> — и выиграл.</span></span>
           </span>
         </button>
         <button class="flip q6" type="button" aria-pressed="false">
           <span class="in">
             <span class="side front"><img src="../stickers/book.webp" alt="">Кто сидит на скамейке с вороной и лисицей?<small>нажми, чтобы узнать</small></span>
-            <span class="side back"><span class="fact-pic"><img class="blur" src="images/facts/fact6.jpg" alt="" loading="lazy"><img src="images/facts/fact6.jpg" alt="" loading="lazy"></span><span>Это <b>Иван Андреевич Крылов</b> — он сочинял басни, короткие смешные истории про зверей.</span></span>
+            <span class="side back"><span class="fact-pic"><img src="images/facts/fact6.jpg" alt="" loading="lazy"></span><span>Это <b>Иван Андреевич Крылов</b> — он сочинял басни, короткие смешные истории про зверей.</span></span>
           </span>
         </button>
       </div>
