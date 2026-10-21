@@ -7,6 +7,7 @@
  *    в data/reviews.json репозитория на GitHub — через минуту он на сайте у всех.
  *    У опубликованного остаётся кнопка «Снять с сайта».
  * 3. GET ?setup=1 один раз подключает бота к этой функции (setWebhook).
+ *    GET ?check=1 проверяет, видит ли функция Telegram и GitHub и верны ли токены.
  *
  * Хранится только то, что человек сам написал: имя и текст. Ни почты, ни телефона, ни адреса.
  *
@@ -39,6 +40,9 @@ const cors = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
+/** Сколько ждать Telegram и GitHub: функция должна успеть ответить до своего таймаута. */
+const NET_MS = 4000;
+
 const reply = (statusCode, body, headers = {}) => ({
   statusCode, headers: { 'Content-Type': 'application/json; charset=utf-8', ...headers }, body: JSON.stringify(body),
 });
@@ -50,6 +54,7 @@ function clean(s, max) {
 async function tg(method, payload) {
   const r = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${method}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(NET_MS),
   });
   const j = await r.json();
   if (!j.ok) throw new Error(`Telegram ${method}: ${j.description}`);
@@ -64,6 +69,7 @@ async function github(method, path, body) {
       'User-Agent': 'malenkiy-karavan-reviews', 'Content-Type': 'application/json',
     },
     body: body && JSON.stringify(body),
+    signal: AbortSignal.timeout(NET_MS),
   });
   if (!r.ok) throw new Error(`GitHub ${method} ${path}: ${r.status} ${await r.text()}`);
   return r.json();
@@ -151,6 +157,21 @@ module.exports.handler = async (event, context) => {
   const method = event.httpMethod;
   if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
   const headers = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  if (method === 'GET' && event.queryStringParameters?.check === '1') {
+    const probe = async (name, fn) => {
+      try { return [name, `ok: ${await fn()}`]; } catch (e) { return [name, `ошибка: ${e.name === 'TimeoutError' ? 'нет ответа за 4 с (нет выхода в интернет или сервис закрыт)' : e.message}`]; }
+    };
+    const result = Object.fromEntries(await Promise.all([
+      probe('telegram', async () => `бот @${(await tg('getMe', {})).username}`),
+      probe('github', async () => `${(await github('GET', `contents/${FILE}?ref=main`)).path} читается`),
+      probe('настройки', async () => {
+        const missing = ['BOT_TOKEN', 'ADMIN_CHAT_ID', 'GITHUB_TOKEN', 'HOOK_SECRET'].filter(k => !process.env[k]);
+        if (missing.length) throw new Error(`не заданы ${missing.join(', ')}`);
+        return `модераторов: ${admins().length}`;
+      }),
+    ]));
+    return reply(200, result);
+  }
   if (method === 'GET' && event.queryStringParameters?.setup === '1') {
     const url = process.env.WEBHOOK_URL || `https://functions.yandexcloud.net/${context.functionName}`;
     const result = await tg('setWebhook', { url, secret_token: process.env.HOOK_SECRET, allowed_updates: ['callback_query'] });
