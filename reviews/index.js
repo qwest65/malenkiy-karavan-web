@@ -19,6 +19,8 @@
  *   REPO           — qwest65/malenkiy-karavan-web (по умолчанию)
  *   ALLOW_ORIGIN   — https://xn----7sbbaalryjidglrj8b2n.xn--p1ai (откуда разрешено присылать отзывы)
  *   WEBHOOK_URL    — адрес этой функции, если ?setup=1 не угадал его сам
+ *   TG_API         — адрес Telegram Bot API через посредника, если api.telegram.org из облака
+ *                    недоступен (например, https://ваш-сервер/tg-…); по умолчанию https://api.telegram.org
  */
 'use strict';
 
@@ -52,7 +54,8 @@ function clean(s, max) {
 }
 
 async function tg(method, payload) {
-  const r = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${method}`, {
+  const api = (process.env.TG_API || 'https://api.telegram.org').replace(/\/+$/, '');
+  const r = await fetch(`${api}/bot${process.env.BOT_TOKEN}/${method}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     signal: AbortSignal.timeout(NET_MS),
   });
