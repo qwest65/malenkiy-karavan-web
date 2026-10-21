@@ -33,7 +33,7 @@ jobs:
       - name: Update data/reviews.json
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, re
           ev = json.load(open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8"))
           issue, action = ev["issue"], ev["action"]
           path = "data/reviews.json"
@@ -42,8 +42,16 @@ jobs:
           publish = issue["state"] == "closed" and issue.get("state_reason") == "completed"
           if publish:
               name = issue["title"].split(":", 1)[1].strip()[:40]
-              text = (issue.get("body") or "").replace("\r\n", "\n").strip()[:1000]
-              reviews.append({"id": issue["number"], "name": name, "text": text, "date": issue["created_at"][:10]})
+              text = (issue.get("body") or "").replace("\r\n", "\n").strip()
+              # Первая строка «Оценка: ★★★★☆ (4 из 5)» — оценка; её можно поправить или стереть.
+              m = re.match(r"Оценка:[^\n]*?(\d)\s*из\s*5[^\n]*\n*", text)
+              rating = int(m.group(1)) if m and 1 <= int(m.group(1)) <= 5 else 0
+              if m:
+                  text = text[m.end():].strip()
+              review = {"id": issue["number"], "name": name, "text": text[:1000], "date": issue["created_at"][:10]}
+              if rating:
+                  review["rating"] = rating
+              reviews.append(review)
               reviews.sort(key=lambda r: (r["date"], r["id"]), reverse=True)
           json.dump(reviews, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
           open(path, "a").write("\n")
