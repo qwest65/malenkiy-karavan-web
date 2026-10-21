@@ -21,8 +21,8 @@ jobs:
 
       - name: JavaScript без синтаксических ошибок
         run: |
-          node --check app.js
-          node --check sw.js
+          node --check progulka/app.js
+          node --check progulka/sw.js
 
       - name: Файлы и данные на месте
         run: python3 tests/check_files.py

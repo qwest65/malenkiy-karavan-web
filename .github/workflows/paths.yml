@@ -37,9 +37,9 @@ jobs:
             exit 0
           fi
           # Новая версия кэша — чтобы телефоны забрали новые линии.
-          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" sw.js)
-          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" sw.js
-          git add sw.js
+          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" progulka/sw.js)
+          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" progulka/sw.js
+          git add progulka/sw.js
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Update streets and walking paths"

@@ -25,11 +25,11 @@ for name in ("route", "paths", "streets", "files"):
     except Exception as e:  # noqa: BLE001
         errors.append(f"data/{name}.json не читается: {e}")
 
-sw = (ROOT / "sw.js").read_text(encoding="utf-8")
+sw = (ROOT / "progulka/sw.js").read_text(encoding="utf-8")
 shell = re.search(r"const SHELL = \[(.*?)\];", sw, re.S).group(1)
 for f in re.findall(r"'([^']+)'", shell):
     if f != "./":
-        need(f, "SHELL в sw.js")
+        need(os.path.normpath(os.path.join("progulka", f)), "SHELL в progulka/sw.js")
 
 for f in json.loads((ROOT / "data/files.json").read_text(encoding="utf-8")):
     need(f, "data/files.json")
@@ -56,12 +56,12 @@ paths = json.loads((ROOT / "data/paths.json").read_text(encoding="utf-8"))
 if paths.get("route") != route["id"]:
     errors.append("data/paths.json построен для другого маршрута")
 
-site = (ROOT / "site/index.html").read_text(encoding="utf-8")
+site = (ROOT / "index.html").read_text(encoding="utf-8")
 for ref in re.findall(r'(?:src|href)="([^"#:]+)"', site):
     if "'" in ref or "+" in ref:  # адрес, который собирает скрипт страницы
         continue
-    target = os.path.normpath(os.path.join("site", ref))
-    need(target + "/index.html" if ref.endswith("/") else target, f"ссылка {ref} на сайте проекта")
+    target = os.path.normpath(ref)
+    need(os.path.join(target, "index.html") if ref.endswith("/") else target, f"ссылка {ref} на сайте проекта")
 flips = len(re.findall(r'class="flip ', site))
 for n in range(1, flips + 1):
     need(f"site/audio/fact{n}.mp3", "озвучка карточки на сайте")
