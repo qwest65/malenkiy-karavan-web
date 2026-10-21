@@ -66,6 +66,16 @@ flips = len(re.findall(r'class="flip ', site))
 for n in range(1, flips + 1):
     need(f"site/audio/fact{n}.mp3", "озвучка карточки на сайте")
 
+# Для поисковиков: карта сайта ведёт на настоящие страницы, а точки в разметке schema.org
+# на главной совпадают с маршрутом (после правки точек обновите их в index.html).
+for loc in re.findall(r"<loc>https://[^/]+/([^<]*)</loc>", (ROOT / "sitemap.xml").read_text(encoding="utf-8")):
+    need(loc + "index.html" if loc.endswith("/") or not loc else loc, "sitemap.xml")
+ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', site, re.S).group(1))
+trip = next(g for g in ld["@graph"] if g["@type"] == "TouristTrip")
+names = [i["item"]["name"] for i in trip["itinerary"]["itemListElement"]]
+if names != [route["stops"][i]["title"] for i in route["default_order"]]:
+    errors.append("точки в разметке schema.org на главной (index.html) не совпадают с data/route.json")
+
 if errors:
     print("\n".join(errors))
     sys.exit(1)

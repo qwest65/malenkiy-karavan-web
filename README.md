@@ -163,6 +163,16 @@ npm install --no-save playwright && npx playwright install chromium && node test
 MAX перечитывает карточку сам. Если всё же видна старая — отправьте ссылку с хвостиком,
 например `https://маленький-караван.рф/progulka/?v=3` (каждый раз новое число).
 
+## Поиск (Яндекс, Google)
+
+- `robots.txt` и `sitemap.xml` — что индексировать; карта сайта: главная, прогулка, политика.
+- На главной (`index.html`) — заголовок и описание под запросы вроде «прогулка по Троицку с детьми»,
+  `canonical` на маленький-караван.рф и разметка schema.org (`TouristTrip` с 9 точками маршрута).
+  Если поменялись точки маршрута, обновите их и в этой разметке — `tests/check_files.py` напомнит.
+- `404.html` — своя страница «Ой, такой страницы нет» с кнопками на прогулку и на главную.
+- Яндекс Вебмастер и Google Search Console: код подтверждения прав вставляется в `<head>` главной
+  (`<meta name="yandex-verification" …>`, `<meta name="google-site-verification" …>`).
+
 ## Связанные проекты
 
 - 📱 [Android-приложение](https://github.com/qwest65/malenkiy-karavan) — тот же маршрут, есть в RuStore.
