@@ -6,12 +6,13 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.13';
+const APP_VERSION = '1.14';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
 const DIPLOMA_KEY = 'karavan.diploma';
-const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+/** Своя подложка карты из OpenStreetMap: лежит рядом с прогулкой (tools/build_map.py). */
+const MAP_STYLE = 'map/style.json';
 
 /** Радиус прибытия по умолчанию, м. */
 const DEFAULT_RADIUS_M = 20;
@@ -896,80 +897,17 @@ const BLANK_STYLE = {
 };
 
 /**
- * Карта без интернета по всему району прогулки. Сама по себе подложка сохраняется только там,
- * куда уже смотрели (sw.js, кэш karavan-map). Поэтому один раз, пока есть интернет, сохраняем
- * в тот же кэш всё, что нужно карте вокруг маршрута: стиль, кусочки карты до приближения 14
- * (дальше карта дорисовывает их сама), шрифты подписей с кириллицей и значки.
- * Кусочки карты у OpenFreeMap выходят новыми версиями — тогда сохраняем заново.
+ * Подложка карты — своя, из папки map/ (tools/build_map.py): чужой сервер карт у части
+ * провайдеров заблокирован. Открылась прогулка — открылась и карта, а sw.js сохраняет её
+ * в телефон вместе с остальными файлами. Кусочки карты есть на весь Троицк.
  */
-const MAP_CACHE = 'karavan-map';
-const MAP_SAVED_KEY = 'karavan.mapSaved';
-// Сильнее 11 карту не отдаляем: там уже весь город, а кусочки для этого не сохранены.
+// Сильнее 11 карту не отдаляем: там уже весь город, а кусочков дальше нет.
 const MAP_MIN_ZOOM = 11;
-const MAP_ZOOMS = [MAP_MIN_ZOOM, 14];
-const MAP_MARGIN = 0.01;
-const GLYPH_RANGES = ['0-255', '256-511', '1024-1279', '8192-8447'];
 
-function tilesAround(stops, z) {
-  const lats = stops.map(s => s.lat), lons = stops.map(s => s.lon);
-  const n = 2 ** z;
-  const x = lon => Math.floor((lon + 180) / 360 * n);
-  const y = lat => { const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n); };
-  const out = [];
-  // Плюс по кусочку с каждой стороны — чтобы экран телефона не упирался в пустоту.
-  for (let tx = x(Math.min(...lons) - MAP_MARGIN) - 1; tx <= x(Math.max(...lons) + MAP_MARGIN) + 1; tx++) {
-    for (let ty = y(Math.max(...lats) + MAP_MARGIN) - 1; ty <= y(Math.min(...lats) - MAP_MARGIN) + 1; ty++) out.push([z, tx, ty]);
-  }
-  return out;
-}
-
-async function saveMapOffline() {
-  if (!('caches' in window) || !navigator.onLine) return;
-  try {
-    const getJson = async url => { const r = await fetch(url); if (!r.ok) throw new Error(url); return [r, await r.clone().json()]; };
-    const [styleRes, style] = await getJson(MAP_STYLE);
-    const saved = [[MAP_STYLE, styleRes]];
-    const urls = new Set();
-    let version = '';
-    for (const src of Object.values(style.sources || {})) {
-      if (src.type !== 'vector' || !src.url) continue;
-      const [tjRes, tj] = await getJson(src.url);
-      saved.push([src.url, tjRes]);
-      const template = tj.tiles[0];
-      version += template;
-      const from = Math.max(tj.minzoom || 0, MAP_ZOOMS[0]), to = Math.min(tj.maxzoom || 14, MAP_ZOOMS[1]);
-      for (let z = from; z <= to; z++) {
-        for (const [tz, tx, ty] of tilesAround(route.stops, z)) urls.add(template.replace('{z}', tz).replace('{x}', tx).replace('{y}', ty));
-      }
-    }
-    try { if (localStorage.getItem(MAP_SAVED_KEY) === version) return; } catch (_) { /* нет хранилища */ }
-    if (typeof style.sprite === 'string') {
-      for (const k of ['', '@2x']) for (const ext of ['.json', '.png']) urls.add(style.sprite + k + ext);
-    }
-    if (style.glyphs) {
-      const stacks = new Set();
-      for (const layer of style.layers || []) {
-        const font = layer.layout && layer.layout['text-font'];
-        if (Array.isArray(font) && font.every(f => typeof f === 'string')) stacks.add(font.join(','));
-      }
-      for (const stack of stacks) for (const range of GLYPH_RANGES) urls.add(style.glyphs.replace('{fontstack}', stack).replace('{range}', range));
-    }
-    const cache = await caches.open(MAP_CACHE);
-    for (const [url, res] of saved) await cache.put(url, res);
-    const queue = [...urls];
-    let failed = 0;
-    await Promise.all(Array.from({ length: 4 }, async () => {
-      while (queue.length) {
-        const url = queue.shift();
-        if (await cache.match(url)) continue;
-        try {
-          const r = await fetch(url);
-          if (r.ok) await cache.put(url, r); else failed++;
-        } catch (_) { failed++; }
-      }
-    }));
-    if (!failed) { try { localStorage.setItem(MAP_SAVED_KEY, version); } catch (_) { /* нет хранилища */ } }
-  } catch (_) { /* нет сети или сервис карты недоступен — попробуем в следующий раз */ }
+/** Адреса внутри map/style.json — относительно папки map/, а карте нужны полные. */
+const MAP_STYLE_URL = new URL(MAP_STYLE, location.href).href;
+function absoluteUrl(url) {
+  return /^[a-z][a-z0-9+.-]*:/i.test(url) ? undefined : { url: new URL(url, MAP_STYLE_URL).href };
 }
 
 function ensureMap() {
@@ -977,10 +915,11 @@ function ensureMap() {
   const first = route.stops[route.default_order[0]];
   M.map = new maplibregl.Map({
     container: 'map',
-    style: MAP_STYLE,
+    style: MAP_STYLE_URL,
     center: [first.lon, first.lat],
     zoom: 15,
     minZoom: MAP_MIN_ZOOM,
+    transformRequest: absoluteUrl,
     attributionControl: { compact: true },
     pitchWithRotate: false,
   });
@@ -2331,7 +2270,6 @@ async function boot() {
       if (hadController && S.screen === 'home') location.reload();
     });
     navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(() => { /* без офлайна */ });
-    setTimeout(saveMapOffline, 4000);
   }
 }
 

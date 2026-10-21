@@ -810,8 +810,11 @@
         Promise.all([load('../vendor/maplibre-gl.css', 'link'), load('../vendor/maplibre-gl.js', 'script')]).then(function () {
           var pts = order.map(function (i) { return [route.stops[i].lon, route.stops[i].lat]; });
           var bounds = pts.reduce(function (b, p) { return b.extend(p); }, new maplibregl.LngLatBounds(pts[0], pts[0]));
+          // Своя подложка карты (папка map/): чужой сервер карт у части провайдеров заблокирован.
+          var style = new URL('../map/style.json', location.href).href;
           map = new maplibregl.Map({
-            container: box, style: 'https://tiles.openfreemap.org/styles/liberty', bounds: bounds,
+            container: box, style: style, bounds: bounds,
+            transformRequest: function (url) { return /^[a-z][a-z0-9+.-]*:/i.test(url) ? undefined : { url: new URL(url, style).href }; },
             fitBoundsOptions: { padding: 60 }, attributionControl: { compact: true },
             cooperativeGestures: true, dragRotate: false, pitchWithRotate: false,
             locale: {

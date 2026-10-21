@@ -43,6 +43,15 @@ for n, stop in enumerate(route["stops"], start=1):
     for key in ("lat", "lon", "parent_story"):
         if key not in stop:
             errors.append(f"у точки {n} нет поля {key}")
+try:
+    style = json.loads((ROOT / "map/style.json").read_text(encoding="utf-8"))
+    need("map/" + style["sprite"] + ".json", "значки карты")
+    for src in style["sources"].values():
+        z = src["minzoom"]
+        if not any((ROOT / "map" / src["tiles"][0].split("{z}")[0] / str(z)).iterdir()):
+            errors.append(f"нет кусочков карты на приближении {z}")
+except Exception as e:  # noqa: BLE001
+    errors.append(f"map/style.json не читается — запустите workflow «Map»: {e}")
 paths = json.loads((ROOT / "data/paths.json").read_text(encoding="utf-8"))
 if paths.get("route") != route["id"]:
     errors.append("data/paths.json построен для другого маршрута")

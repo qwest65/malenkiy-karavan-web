@@ -1,0 +1,45 @@
+name: Map
+
+# Своя подложка карты: tools/build_map.py скачивает с OpenFreeMap (данные OpenStreetMap)
+# оформление, кусочки карты Троицка, значки и шрифты в папку map/ и коммитит их.
+# Карта сама не обновляется — когда в городе что-то поменялось, запустите вручную:
+# Actions → Map → Run workflow.
+on:
+  push:
+    branches: ["main", "claude/**"]
+    paths:
+      - "tools/build_map.py"
+      - ".github/workflows/map.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: map-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build map
+        run: python3 tools/build_map.py
+
+      - name: Commit map
+        run: |
+          git add -A map data/files.json
+          if git diff --cached --quiet; then
+            echo "Карта не изменилась."
+            exit 0
+          fi
+          # Новая версия кэша — чтобы телефоны забрали новую карту.
+          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" sw.js)
+          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" sw.js
+          git add sw.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update map"
+          git push
