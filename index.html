@@ -764,7 +764,7 @@
   // Отзывы: опубликованные лежат в data/reviews.json, новые уходят на проверку в Telegram
   // через функцию Яндекс Облака (папка reviews/). Пока адрес функции пуст, формы не видно.
   (function () {
-    var REVIEWS_URL = '';
+    var REVIEWS_URL = 'https://functions.yandexcloud.net/d4efh178lim2js3u2kuv';
     var list = document.getElementById('reviews-list');
     var months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
     fetch('data/reviews.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (items) {
