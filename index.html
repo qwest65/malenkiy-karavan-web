@@ -287,6 +287,24 @@
     #parents  { --accent: #ec4f8a; --accent-dark: #b92f63; }
     #teachers { --accent: #1aa39a; --accent-dark: #127a73; }
     #faq      { --accent: #f2a100; --accent-dark: #c27f00; }
+    #reviews  { --accent: #e5533d; --accent-dark: #b33a27; }
+    /* ---------- Отзывы ---------- */
+    .reviews-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .review { background: #fff6ee; border: 3px solid #ffd9c2; border-radius: 22px; padding: 18px 20px; line-height: 1.5; }
+    .review p { margin: 0 0 10px; white-space: pre-line; overflow-wrap: anywhere; }
+    .review .by { font-weight: 800; color: var(--accent-dark); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .review .by time { font-weight: 600; color: var(--muted); }
+    .reviews-empty { color: var(--muted); font-weight: 600; margin: 0; }
+    .review-form { margin-top: 26px; background: #fffaf0; border: 3px dashed #ffd28f; border-radius: 24px; padding: 20px; display: grid; gap: 12px; }
+    .review-form h3 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--brown); }
+    .review-form input, .review-form textarea { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 2px solid #f1d3a7; border-radius: 16px; background: #fff; color: var(--ink); }
+    .review-form textarea { min-height: 120px; resize: vertical; }
+    .review-form .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .review-form small { color: var(--muted); line-height: 1.4; }
+    .review-form button { justify-self: start; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 1.05rem; color: #fff; background: var(--accent); padding: 13px 26px; border-radius: 999px; box-shadow: 0 5px 0 var(--accent-dark); }
+    .review-form button:disabled { opacity: .6; cursor: default; }
+    .review-status { font-weight: 700; margin: 0; }
+    .review-status.ok { color: var(--green-dark); } .review-status.err { color: #b33a27; }
     .peek { position: absolute; width: 96px; z-index: 2; pointer-events: none; filter: drop-shadow(0 6px 6px rgba(0,0,0,0.18)); animation: wiggle 4s ease-in-out infinite; }
     .peek.r { right: -22px; top: -34px; transform: rotate(12deg); }
     .peek.l { left: -24px; bottom: -30px; transform: rotate(-12deg); }
@@ -669,6 +687,24 @@
     </div>
   </section>
 
+  <section id="reviews">
+    <div class="panel">
+      <img class="peek r" src="stickers/gingerbread.webp" alt="" aria-hidden="true">
+      <h2><span>💬</span>Отзывы</h2>
+      <p class="lead">Что говорят те, кто уже погулял с Трошей</p>
+      <div class="reviews-list" id="reviews-list"><p class="reviews-empty">Пока отзывов нет — будьте первыми!</p></div>
+      <form class="review-form" id="review-form" hidden>
+        <h3>✍️ Оставить отзыв</h3>
+        <input name="name" maxlength="40" required autocomplete="off" placeholder="Имя, например: Мама Маши">
+        <textarea name="text" maxlength="1000" required placeholder="Как прошла прогулка? Что понравилось ребёнку?"></textarea>
+        <input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <small>Отзыв появится на сайте после проверки. Пишите только имя — без фамилии, телефона и адреса.</small>
+        <button type="submit">Отправить отзыв</button>
+        <p class="review-status" id="review-status" role="status"></p>
+      </form>
+    </div>
+  </section>
+
   <section id="faq">
     <div class="panel faq">
       <img class="peek r" src="stickers/key.webp" alt="" aria-hidden="true">
@@ -679,7 +715,7 @@
       <details><summary>📱 На каком телефоне работает?</summary><p>На любом современном телефоне — iPhone и Android: прогулка открывается прямо в браузере, в том числе из Telegram и MAX, и её можно поставить иконкой на экран «Домой». Для Android 8.0 и новее есть и отдельное приложение — в <a href="https://www.rustore.ru/catalog/app/ru.malenkiykaravan" target="_blank" rel="noopener">RuStore</a>.</p></details>
       <details><summary>⏸️ Можно ли прерваться и продолжить потом?</summary><p>Да. Прогулку можно поставить на паузу, пропустить точку или завершить в любой момент — найденные вещи останутся в альбоме.</p></details>
       <details><summary>🧒 Для какого возраста?</summary><p>Для детей 4–7 лет вместе со взрослыми. Старшим детям и родителям тоже интересно: для взрослых на каждой точке есть историческая справка.</p></details>
-      <details><summary>🔒 Собирает ли приложение данные?</summary><p>Нет. Регистрации нет, фото хранятся только на вашем телефоне. Подробнее — в <a href="site/privacy.html">политике конфиденциальности</a>.</p></details>
+      <details><summary>🔒 Собирает ли приложение данные?</summary><p>Нет. Регистрации нет, фото и имя для грамоты хранятся только на вашем телефоне. В отзыве — только имя и текст, публикуется он после проверки. Подробнее — в <a href="site/privacy.html">политике конфиденциальности</a>.</p></details>
     </div>
   </section>
 
@@ -725,6 +761,55 @@
 </footer>
 
 <script>
+  // Отзывы: опубликованные лежат в data/reviews.json, новые уходят на проверку в Telegram
+  // через функцию Яндекс Облака (папка reviews/). Пока адрес функции пуст, формы не видно.
+  (function () {
+    var REVIEWS_URL = '';
+    var list = document.getElementById('reviews-list');
+    var months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    fetch('data/reviews.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (items) {
+      if (!items.length) return;
+      list.textContent = '';
+      items.forEach(function (it) {
+        var card = document.createElement('article'), p = document.createElement('p'), f = document.createElement('div');
+        var who = document.createElement('span'), when = document.createElement('time');
+        card.className = 'review';
+        f.className = 'by';
+        p.textContent = it.text;
+        who.textContent = it.name;
+        var d = (it.date || '').split('-');
+        if (d.length === 3) { when.dateTime = it.date; when.textContent = +d[2] + ' ' + months[+d[1] - 1] + ' ' + d[0]; }
+        f.append(who, when);
+        card.append(p, f);
+        list.append(card);
+      });
+    }).catch(function () { /* без отзывов */ });
+
+    var form = document.getElementById('review-form'), status = document.getElementById('review-status');
+    if (!REVIEWS_URL) return;
+    form.hidden = false;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var btn = form.querySelector('button');
+      btn.disabled = true;
+      status.className = 'review-status';
+      status.textContent = 'Отправляем…';
+      fetch(REVIEWS_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name.value, text: form.text.value, website: form.website.value }),
+      }).then(function (r) {
+        if (r.status === 429) throw new Error('Отзыв уже отправлен — подождите минутку.');
+        if (!r.ok) throw new Error('Не получилось отправить. Попробуйте ещё раз.');
+        form.reset();
+        status.className = 'review-status ok';
+        status.textContent = 'Спасибо! Отзыв появится на сайте после проверки.';
+      }).catch(function (err) {
+        status.className = 'review-status err';
+        status.textContent = err.message.indexOf('Отзыв') === 0 || err.message.indexOf('Не получилось') === 0 ? err.message : 'Нет связи. Попробуйте ещё раз.';
+      }).then(function () { btn.disabled = false; });
+    });
+  })();
+
   (function () {
     var btn = document.getElementById('listen'), audio = document.getElementById('voice');
     var lbl = btn.querySelector('.lbl'), ic = btn.querySelector('.ic');
