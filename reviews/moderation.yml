@@ -1,0 +1,61 @@
+# Модерация отзывов. Этот файл лежит в закрытом репозитории отзывов
+# (qwest65/malenkiy-karavan-otzyvy) как .github/workflows/moderation.yml.
+#
+# Отзыв с сайта приходит сюда задачей (Issue) «Отзыв: имя».
+#   Close issue (как выполненную)  → отзыв появляется на сайте;
+#   Close as not planned           → не публикуется;
+#   Reopen                         → снимается с сайта;
+#   правка текста закрытой задачи   → на сайте обновляется текст.
+# Секрет SITE_TOKEN — токен GitHub с правом Contents: Read and write на репозиторий сайта.
+name: Moderation
+
+on:
+  issues:
+    types: [closed, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reviews
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: startsWith(github.event.issue.title, 'Отзыв:')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: qwest65/malenkiy-karavan-web
+          token: ${{ secrets.SITE_TOKEN }}
+
+      - name: Update data/reviews.json
+        run: |
+          python3 - <<'PY'
+          import json, os
+          ev = json.load(open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8"))
+          issue, action = ev["issue"], ev["action"]
+          path = "data/reviews.json"
+          reviews = json.load(open(path, encoding="utf-8"))
+          reviews = [r for r in reviews if r.get("id") != issue["number"]]
+          publish = issue["state"] == "closed" and issue.get("state_reason") == "completed"
+          if publish:
+              name = issue["title"].split(":", 1)[1].strip()[:40]
+              text = (issue.get("body") or "").replace("\r\n", "\n").strip()[:1000]
+              reviews.append({"id": issue["number"], "name": name, "text": text, "date": issue["created_at"][:10]})
+              reviews.sort(key=lambda r: (r["date"], r["id"]), reverse=True)
+          json.dump(reviews, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+          open(path, "a").write("\n")
+          print(("опубликован" if publish else "снят / не опубликован"), f"отзыв #{issue['number']}, всего на сайте: {len(reviews)}")
+          PY
+
+      - name: Commit to the site
+        run: |
+          git add data/reviews.json
+          if git diff --cached --quiet; then echo "На сайте ничего не меняется."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Отзыв #${{ github.event.issue.number }}: ${{ github.event.action }}"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
+          exit 1

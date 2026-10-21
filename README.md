@@ -78,6 +78,7 @@
 | `images/` | Картинка для карточки ссылки и QR-код (`tools/make_qr.py`) |
 | `map/` | Своя карта Троицка: оформление, кусочки карты, значки и шрифты — строится сама (workflow «Map») |
 | `vendor/` | Библиотека карты MapLibre GL JS 4.7.1 |
+| `reviews/` | Отзывы: функция Яндекс Облака, workflow модерации и инструкция |
 | `site/` | Картинки и озвучка сайта проекта, политика конфиденциальности (`site/privacy.html`); `site/index.html` перенаправляет на главную |
 | `tools/build_map.py` | Скачивает карту Троицка с OpenFreeMap в `map/` (workflow «Map») |
 | `tools/build_streets.py` | Строит пешеходные линии и улицы из OpenStreetMap (workflow «Walking paths») |
@@ -162,6 +163,13 @@ npm install --no-save playwright && npx playwright install chromium && node test
 
 MAX перечитывает карточку сам. Если всё же видна старая — отправьте ссылку с хвостиком,
 например `https://маленький-караван.рф/progulka/?v=3` (каждый раз новое число).
+
+## Отзывы
+
+На главной — раздел «Отзывы»: опубликованные лежат в `data/reviews.json`. Новый отзыв через форму
+становится задачей в закрытом репозитории `malenkiy-karavan-otzyvy`; GitHub присылает пуш, и одним
+нажатием задачу закрывают — отзыв на сайте, или закрывают как «not planned» — не публикуется.
+Функция, workflow модерации и настройка — в папке [`reviews/`](reviews/README.md).
 
 ## Поиск (Яндекс, Google)
 
