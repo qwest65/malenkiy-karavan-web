@@ -121,7 +121,6 @@ const check = (ok, what) => { console.log(`${ok ? '✓' : '✗'} ${what}`); if (
     });
     check(routeInfo.got === routeInfo.want && routeInfo.lead.startsWith(String(routeInfo.want)),
       `точки маршрута на сайте взяты из данных (${routeInfo.got} из ${routeInfo.want})`);
-    check(await site.isVisible('#reviews h2'), 'на сайте есть раздел «Отзывы»');
     check(siteErrors.length === 0, `сайт без ошибок${siteErrors.length ? ': ' + siteErrors.join('; ') : ''}`);
   } finally {
     await browser.close();

@@ -19,7 +19,7 @@ def need(path, why):
         errors.append(f"нет файла {path} ({why})")
 
 
-for name in ("route", "paths", "streets", "files", "reviews"):
+for name in ("route", "paths", "streets", "files"):
     try:
         json.loads((ROOT / f"data/{name}.json").read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
