@@ -292,12 +292,24 @@
     .reviews-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
     .review { background: #fff6ee; border: 3px solid #ffd9c2; border-radius: 22px; padding: 18px 20px; line-height: 1.5; }
     .review p { margin: 0 0 10px; white-space: pre-line; overflow-wrap: anywhere; }
-    .review .by { font-weight: 800; color: var(--accent-dark); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .review .by time { font-weight: 600; color: var(--muted); }
+    .review .stars { color: #f2a100; font-size: 1.2rem; letter-spacing: 2px; margin: 0 0 6px; }
+    .review .by { font-weight: 800; color: var(--accent-dark); display: grid; gap: 2px; }
+    .review .by time { font-weight: 600; color: var(--muted); font-size: .95rem; }
+    .reviews-more { display: block; margin: 18px auto 0; border: 3px solid #ffd9c2; background: #fff; color: var(--accent-dark); font: inherit; font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 999px; cursor: pointer; }
+    .reviews-more[hidden] { display: none; }
+    /* Оценка в форме: пять звёзд, справа налево — чтобы подсвечивались все до выбранной. */
+    .rate { border: 0; margin: 0; padding: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .rate legend { float: left; font-weight: 700; color: var(--brown); padding: 0; }
+    .rate .stars-input { display: inline-flex; flex-direction: row-reverse; }
+    .rate input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .rate label { font-size: 2.1rem; line-height: 1; color: #e6d6bd; cursor: pointer; padding: 0 2px; transition: transform .1s; }
+    .rate label:hover, .rate label:hover ~ label, .rate input:checked ~ label { color: #f2a100; }
+    .rate input:focus-visible + label { outline: 3px solid #ffd28f; border-radius: 8px; }
+    .rate label:active { transform: scale(1.2); }
     .reviews-empty { color: var(--muted); font-weight: 600; margin: 0; }
     .review-form { margin-top: 26px; background: #fffaf0; border: 3px dashed #ffd28f; border-radius: 24px; padding: 20px; display: grid; gap: 12px; }
     .review-form h3 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--brown); }
-    .review-form input, .review-form textarea { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 2px solid #f1d3a7; border-radius: 16px; background: #fff; color: var(--ink); }
+    .review-form input:not([type=radio]), .review-form textarea { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 2px solid #f1d3a7; border-radius: 16px; background: #fff; color: var(--ink); }
     .review-form textarea { min-height: 120px; resize: vertical; }
     .review-form .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
     .review-form small { color: var(--muted); line-height: 1.4; }
@@ -693,8 +705,19 @@
       <h2><span>💬</span>Отзывы</h2>
       <p class="lead">Что говорят те, кто уже погулял с Трошей</p>
       <div class="reviews-list" id="reviews-list"><p class="reviews-empty">Пока отзывов нет — будьте первыми!</p></div>
+      <button class="reviews-more" id="reviews-more" type="button" hidden>Показать ещё</button>
       <form class="review-form" id="review-form" hidden>
         <h3>✍️ Оставить отзыв</h3>
+        <fieldset class="rate">
+          <legend>Ваша оценка:</legend>
+          <span class="stars-input">
+            <input type="radio" name="rating" id="rate5" value="5" required><label for="rate5" title="5 — отлично">★</label>
+            <input type="radio" name="rating" id="rate4" value="4"><label for="rate4" title="4 — хорошо">★</label>
+            <input type="radio" name="rating" id="rate3" value="3"><label for="rate3" title="3 — нормально">★</label>
+            <input type="radio" name="rating" id="rate2" value="2"><label for="rate2" title="2 — так себе">★</label>
+            <input type="radio" name="rating" id="rate1" value="1"><label for="rate1" title="1 — не понравилось">★</label>
+          </span>
+        </fieldset>
         <input name="name" maxlength="40" required autocomplete="off" placeholder="Имя, например: Мама Маши">
         <textarea name="text" maxlength="1000" required placeholder="Как прошла прогулка? Что понравилось ребёнку?"></textarea>
         <input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -766,13 +789,22 @@
   // Пока адрес функции пуст, формы не видно.
   (function () {
     var REVIEWS_URL = 'https://functions.yandexcloud.net/d4e7vu5jrf0s73ugdrq6';
-    var list = document.getElementById('reviews-list');
+    var list = document.getElementById('reviews-list'), more = document.getElementById('reviews-more');
+    // Сначала видно столько свежих отзывов, остальные — по кнопке «Показать ещё».
+    var PAGE = 6;
     var months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
     fetch('data/reviews.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (items) {
       if (!items.length) return;
       list.textContent = '';
       items.forEach(function (it) {
         var card = document.createElement('article'), p = document.createElement('p'), f = document.createElement('div');
+        if (it.rating >= 1 && it.rating <= 5) {
+          var stars = document.createElement('div');
+          stars.className = 'stars';
+          stars.textContent = '★★★★★'.slice(0, it.rating) + '☆☆☆☆☆'.slice(it.rating);
+          stars.setAttribute('aria-label', 'Оценка ' + it.rating + ' из 5');
+          card.append(stars);
+        }
         var who = document.createElement('span'), when = document.createElement('time');
         card.className = 'review';
         f.className = 'by';
@@ -782,8 +814,16 @@
         if (d.length === 3) { when.dateTime = it.date; when.textContent = +d[2] + ' ' + months[+d[1] - 1] + ' ' + d[0]; }
         f.append(who, when);
         card.append(p, f);
+        card.hidden = list.children.length >= PAGE;
         list.append(card);
       });
+      var showMore = function () {
+        var hidden = list.querySelectorAll('.review[hidden]');
+        for (var i = 0; i < hidden.length && i < PAGE; i++) hidden[i].hidden = false;
+        more.hidden = hidden.length <= PAGE;
+      };
+      more.hidden = !list.querySelector('.review[hidden]');
+      more.addEventListener('click', showMore);
     }).catch(function () { /* без отзывов */ });
 
     var form = document.getElementById('review-form'), status = document.getElementById('review-status');
@@ -797,7 +837,7 @@
       status.textContent = 'Отправляем…';
       fetch(REVIEWS_URL, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name.value, text: form.text.value, website: form.website.value }),
+        body: JSON.stringify({ name: form.name.value, text: form.text.value, rating: +((form.querySelector('[name=rating]:checked') || {}).value || 0), website: form.website.value }),
       }).then(function (r) {
         if (r.status === 429) throw new Error('Отзыв уже отправлен — подождите минутку.');
         if (!r.ok) throw new Error('Не получилось отправить. Попробуйте ещё раз.');

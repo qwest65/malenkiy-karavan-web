@@ -1,13 +1,13 @@
 /*
  * Отзывы «Маленького каравана»: функция Яндекс Облака (Cloud Functions, Node.js 18+).
  *
- * Сайт присылает сюда отзыв (POST {name, text}). Функция ничего не хранит, а создаёт задачу (Issue)
- * в закрытом репозитории отзывов на GitHub: заголовок «Отзыв: имя», внутри текст. GitHub присылает
+ * Сайт присылает сюда отзыв (POST {name, text, rating}). Функция ничего не хранит, а создаёт задачу (Issue)
+ * в закрытом репозитории отзывов на GitHub: заголовок «Отзыв: имя», внутри оценка и текст. GitHub присылает
  * модераторам пуш. Закрыли задачу как выполненную — workflow в том репозитории (moderation.yml)
  * публикует отзыв в data/reviews.json сайта; закрыли как «not planned» — отзыв не публикуется;
  * открыли снова — снимается с сайта.
  *
- * Хранится только то, что человек сам написал: имя и текст. Ни почты, ни телефона, ни адреса.
+ * Хранится только то, что человек сам написал: имя, оценка и текст. Ни почты, ни телефона, ни адреса.
  *
  * GET ?check=1 — самопроверка: видит ли функция репозиторий отзывов и задан ли токен.
  *
@@ -61,11 +61,14 @@ async function newReview(event, headers) {
   const name = clean(data.name, MAX_NAME).replace(/\n/g, ' ');
   const text = clean(data.text, MAX_TEXT).replace(/\n{3,}/g, '\n\n');
   if (name.length < 2 || text.length < 5) return reply(400, { error: 'empty' }, cors);
+  const rating = Number.isInteger(data.rating) && data.rating >= 1 && data.rating <= 5 ? data.rating : 0;
   const ip = (headers['x-forwarded-for'] || event.requestContext?.identity?.sourceIp || '').split(',')[0].trim();
   const now = Date.now();
   if (ip && now - (recent.get(ip) || 0) < 60_000) return reply(429, { error: 'too often' }, cors);
   if (ip) recent.set(ip, now);
-  await github('POST', '/issues', { title: `Отзыв: ${name}`, body: text });
+  // Первая строка — оценка: её читает moderation.yml; модератор видит звёзды прямо в задаче.
+  const stars = rating ? `Оценка: ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)} (${rating} из 5)\n\n` : '';
+  await github('POST', '/issues', { title: `Отзыв: ${name}`, body: stars + text });
   return reply(200, { ok: true }, cors);
 }
 
