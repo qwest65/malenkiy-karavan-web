@@ -1,12 +1,14 @@
 /*
  * Работа без интернета: при первом открытии всё приложение — тексты, наклейки и озвучка —
- * сохраняется в телефоне. Кусочки карты запоминаются по мере просмотра.
+ * сохраняется в телефоне, вместе со своей картой Троицка (папка map/).
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
 const VERSION = 'v18';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
-const MAP_CACHE = 'karavan-map';
+const FONT_CACHE = 'karavan-fonts';
+// Прежний кэш подложки с чужого сервера карт — больше не нужен.
+const OLD_MAP_CACHE = 'karavan-map';
 const SHELL = [
   './', 'index.html', 'app.js', 'style.css', 'manifest.webmanifest',
   'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css',
@@ -65,7 +67,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
-      if (key.startsWith('karavan-web-') && key !== APP_CACHE) await caches.delete(key);
+      if ((key.startsWith('karavan-web-') && key !== APP_CACHE) || key === OLD_MAP_CACHE) await caches.delete(key);
     }
     await self.clients.claim();
   })());
@@ -76,10 +78,10 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Карта и шрифты: сначала из памяти телефона, а если нет — из интернета с сохранением.
-  if (url.hostname.endsWith('openfreemap.org') || url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com')) {
+  // Шрифт Rubik: сначала из памяти телефона, а если нет — из интернета с сохранением.
+  if (url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com')) {
     event.respondWith((async () => {
-      const cache = await caches.open(MAP_CACHE);
+      const cache = await caches.open(FONT_CACHE);
       const hit = await cache.match(req);
       const net = fetch(req).then(res => {
         if (res.ok) cache.put(req, res.clone());
