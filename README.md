@@ -7,7 +7,7 @@
 **Прогулка по Троицку с верблюжонком Трошей для детей 4–7 лет и родителей.**
 Работает прямо в браузере телефона: на iPhone и на Android, без установки.
 
-### 👉 [qwest65.github.io/malenkiy-karavan-web](https://qwest65.github.io/malenkiy-karavan-web/)
+### 👉 [маленький-караван.рф](https://маленький-караван.рф/)
 
 <img src="images/qr.png" width="220" alt="QR-код прогулки" />
 
@@ -73,10 +73,10 @@
 | `data/paths.json`, `data/streets.json` | Пешеходные линии и улицы центра — строятся сами из `route.json` |
 | `audio/` | Озвучка: рассказчик — Яндекс SpeechKit, Троша — ElevenLabs (MP3) |
 | `stickers/` | Наклейки: Троша, вещи, значок |
-| `images/` | Картинка для карточки ссылки и QR-код |
+| `images/` | Картинка для карточки ссылки и QR-код (`tools/make_qr.py`) |
 | `map/` | Своя карта Троицка: оформление, кусочки карты, значки и шрифты — строится сама (workflow «Map») |
 | `vendor/` | Библиотека карты MapLibre GL JS 4.7.1 |
-| `site/` | Сайт проекта для родителей и педагогов — https://qwest65.github.io/malenkiy-karavan-web/site/ — и политика конфиденциальности |
+| `site/` | Сайт проекта для родителей и педагогов — https://маленький-караван.рф/site/ — и политика конфиденциальности |
 | `tools/build_map.py` | Скачивает карту Троицка с OpenFreeMap в `map/` (workflow «Map») |
 | `tools/build_streets.py` | Строит пешеходные линии и улицы из OpenStreetMap (workflow «Walking paths») |
 | `tools/generate_audio.py` | Озвучка рассказчика Яндекс SpeechKit (workflow «Voice») |
@@ -145,6 +145,13 @@ npm install --no-save playwright && npx playwright install chromium && node test
 
 ## Публикация
 
+**Адрес** — маленький-караван.рф (латиницей `xn----7sbbaalryjidglrj8b2n.xn--p1ai`, файл `CNAME`).
+Домен куплен в REG.RU; там в DNS четыре записи A на GitHub (`185.199.108.153`, `…109.153`, `…110.153`,
+`…111.153`) и CNAME `www` → `qwest65.github.io`. Сертификат для https бесплатный (Let's Encrypt),
+его выпускает и продлевает GitHub сам. Старый адрес `qwest65.github.io/malenkiy-karavan-web/`
+перенаправляет на новый. Альбом, прогресс и имя для грамоты браузер хранит отдельно для каждого
+адреса — после переезда они начинаются заново.
+
 Сайт публикует GitHub Pages из ветки `main` (Settings → Pages → Deploy from a branch → `main` / `(root)`).
 Изменения появляются по ссылке через 1–2 минуты после попадания в `main`.
 
@@ -152,17 +159,18 @@ npm install --no-save playwright && npx playwright install chromium && node test
 [@WebpageBot](https://t.me/WebpageBot), он обновит её.
 
 MAX перечитывает карточку сам. Если всё же видна старая — отправьте ссылку с хвостиком,
-например `https://qwest65.github.io/malenkiy-karavan-web/?v=3` (каждый раз новое число).
+например `https://маленький-караван.рф/?v=3` (каждый раз новое число).
 
 ## Связанные проекты
 
 - 📱 [Android-приложение](https://github.com/qwest65/malenkiy-karavan) — тот же маршрут, есть в RuStore.
-- 🌐 [Сайт проекта](https://qwest65.github.io/malenkiy-karavan-web/site/) — о прогулке, для родителей и педагогов (папка `site/`).
+- 🌐 [Сайт проекта](https://маленький-караван.рф/site/) — о прогулке, для родителей и педагогов (папка `site/`).
 
 ## История версий
 
 | Версия | Что нового |
 |---|---|
+| 1.16 | Свой адрес: маленький-караван.рф; новый QR-код. Старый адрес на GitHub перенаправляет сюда |
 | 1.15 | Карта шире: квадрат 20 × 20 км вокруг центра — весь город с окраинами |
 | 1.14 | Своя карта Троицка рядом с прогулкой: подложка видна и там, где провайдер блокирует чужой сервер карт |
 | 1.13 | Иконка на экране «Домой» подписана «Маленький караван» |

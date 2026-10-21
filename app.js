@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.15';
+const APP_VERSION = '1.16';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1746,7 +1746,7 @@ window.addEventListener('beforeinstallprompt', e => {
   if (S.screen === 'home') render();
 });
 
-const APP_URL = 'https://qwest65.github.io/malenkiy-karavan-web/';
+const APP_URL = 'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/';
 /** Встроенные браузеры Telegram, ВК, MAX, Instagram и т. п.: там часто нет геопозиции и звука. */
 const inAppBrowser = /Telegram|VKClient|vkontakte|Instagram|FBAN|FBAV|OKApp|OneMe|; wv\)/i.test(navigator.userAgent);
 
