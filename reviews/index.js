@@ -12,7 +12,7 @@
  *
  * Переменные окружения функции:
  *   BOT_TOKEN      — токен бота от @BotFather
- *   ADMIN_CHAT_ID  — ваш chat id в Telegram (кому приходят отзывы)
+ *   ADMIN_CHAT_ID  — chat id в Telegram, кому приходят отзывы; несколько — через запятую
  *   GITHUB_TOKEN   — токен GitHub с правом Contents: Read and write на репозиторий сайта
  *   HOOK_SECRET    — любая длинная случайная строка (защищает webhook от чужих запросов)
  *   REPO           — qwest65/malenkiy-karavan-web (по умолчанию)
@@ -21,11 +21,16 @@
  */
 'use strict';
 
+const crypto = require('crypto');
+
 const REPO = process.env.REPO || 'qwest65/malenkiy-karavan-web';
 const FILE = 'data/reviews.json';
 const ORIGIN = process.env.ALLOW_ORIGIN || 'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai';
 const MAX_NAME = 40;
 const MAX_TEXT = 1000;
+const admins = () => String(process.env.ADMIN_CHAT_ID || '').split(',').map(s => s.trim()).filter(Boolean);
+/** Один и тот же отзыв у всех модераторов — один id: дважды он на сайт не попадёт. */
+const reviewId = r => crypto.createHash('sha256').update(`${r.name}\n${r.text}`).digest('hex').slice(0, 12);
 // Не чаще одного отзыва в минуту с одного адреса — от случайных повторов и простого спама.
 const recent = new Map();
 
@@ -99,24 +104,26 @@ async function newReview(event, headers) {
   const now = Date.now();
   if (ip && now - (recent.get(ip) || 0) < 60_000) return reply(429, { error: 'too often' }, cors);
   if (ip) recent.set(ip, now);
-  await tg('sendMessage', {
-    chat_id: process.env.ADMIN_CHAT_ID,
-    text: `📝 Новый отзыв\n${card(name, text)}`,
-    reply_markup: { inline_keyboard: [[
-      { text: '✅ Опубликовать', callback_data: 'pub' }, { text: '🗑 Удалить', callback_data: 'del' },
-    ]] },
-  });
+  for (const chat_id of admins()) {
+    await tg('sendMessage', {
+      chat_id,
+      text: `📝 Новый отзыв\n${card(name, text)}`,
+      reply_markup: { inline_keyboard: [[
+        { text: '✅ Опубликовать', callback_data: 'pub' }, { text: '🗑 Удалить', callback_data: 'del' },
+      ]] },
+    });
+  }
   return reply(200, { ok: true }, cors);
 }
 
 async function button(update) {
   const q = update.callback_query;
-  if (!q || String(q.message?.chat?.id) !== String(process.env.ADMIN_CHAT_ID)) return reply(200, {});
+  if (!q || !admins().includes(String(q.message?.chat?.id))) return reply(200, {});
   const msg = q.message;
   const review = parseCard(msg);
-  const id = msg.message_id;
+  const id = review && reviewId(review);
   const edit = (title, buttons) => tg('editMessageText', {
-    chat_id: msg.chat.id, message_id: id, text: `${title}\n${card(review.name, review.text)}`,
+    chat_id: msg.chat.id, message_id: msg.message_id, text: `${title}\n${card(review.name, review.text)}`,
     reply_markup: { inline_keyboard: buttons ? [buttons] : [] },
   });
   try {
