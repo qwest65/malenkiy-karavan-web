@@ -7,7 +7,7 @@
 
 - map/style.json        — оформление карты (стиль Liberty) со ссылками на файлы ниже
                           (адреса — относительно папки map/);
-- map/tiles/z/x/y.pbf   — кусочки карты на приближениях 11–14 (ближе карта дорисовывает их сама);
+- map/tiles/z/x/y.pbf   — кусочки карты 20 × 20 км вокруг центра на приближениях 11–14 (ближе карта дорисовывает их сама);
 - map/sprites/          — значки;
 - map/fonts/            — шрифты подписей с кириллицей.
 
@@ -40,8 +40,8 @@ USER_AGENT = "MalenkiyKaravan-build/1.0 (+https://github.com/qwest65/malenkiy-ka
 
 MIN_ZOOM = 11
 MAX_ZOOM = 14
-# Запас вокруг точек маршрута, градусы (~4 км): весь город, чтобы дойти до прогулки из дома.
-MARGIN = 0.04
+# Квадрат вокруг середины маршрута, км: весь город с окраинами, чтобы дойти до прогулки из дома.
+AREA_KM = 20
 # Латиница, кириллица, знаки препинания, «№» и другие значки в подписях.
 GLYPH_RANGES = ["0-255", "256-511", "512-767", "768-1023", "1024-1279", "8192-8447", "8448-8703"]
 
@@ -85,7 +85,12 @@ def build():
     stops = json.loads(ROUTE.read_text(encoding="utf-8"))["stops"]
     lats = [s["lat"] for s in stops]
     lons = [s["lon"] for s in stops]
-    bbox = [min(lons) - MARGIN, min(lats) - MARGIN, max(lons) + MARGIN, max(lats) + MARGIN]
+    lat0 = (min(lats) + max(lats)) / 2
+    lon0 = (min(lons) + max(lons)) / 2
+    # Градус долготы здесь короче градуса широты — иначе квадрат вышел бы узким.
+    dlat = AREA_KM / 2 / 111.32
+    dlon = dlat / math.cos(math.radians(lat0))
+    bbox = [lon0 - dlon, lat0 - dlat, lon0 + dlon, lat0 + dlat]
 
     style = get_json(STYLE_URL)
     if OUT.exists():
