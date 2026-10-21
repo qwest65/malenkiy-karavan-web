@@ -3,7 +3,7 @@
  * сохраняется в телефоне, вместе со своей картой Троицка (папка map/).
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v21';
+const VERSION = 'v22';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 const FONT_CACHE = 'karavan-fonts';
@@ -11,9 +11,10 @@ const FONT_CACHE = 'karavan-fonts';
 const OLD_MAP_CACHE = 'karavan-map';
 const SHELL = [
   './', 'index.html', 'app.js', 'style.css', 'manifest.webmanifest',
-  'vendor/maplibre-gl.js', 'vendor/maplibre-gl.css',
-  'data/route.json', 'data/paths.json', 'data/streets.json', 'data/files.json',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png', 'images/og.jpg',
+  // Общие с сайтом проекта файлы лежат на уровень выше, в корне.
+  '../vendor/maplibre-gl.js', '../vendor/maplibre-gl.css',
+  '../data/route.json', '../data/paths.json', '../data/streets.json', '../data/files.json',
+  '../icons/icon-192.png', '../icons/icon-512.png', '../icons/apple-touch-icon.png', '../icons/favicon.png', '../images/og.jpg',
 ];
 
 /** Safari просит озвучку кусками (Range) и без ответа 206 не играет её из памяти. */
@@ -46,7 +47,7 @@ async function notify(done, total) {
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(APP_CACHE);
-    const files = await (await fetch('data/files.json', { cache: 'reload' })).json();
+    const files = (await (await fetch('../data/files.json', { cache: 'reload' })).json()).map(f => `../${f}`);
     const all = [...SHELL, ...files];
     const queue = all.slice();
     let done = 0;

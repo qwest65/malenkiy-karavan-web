@@ -6,13 +6,13 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.16';
+const APP_VERSION = '1.17';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
 const DIPLOMA_KEY = 'karavan.diploma';
 /** Своя подложка карты из OpenStreetMap: лежит рядом с прогулкой (tools/build_map.py). */
-const MAP_STYLE = 'map/style.json';
+const MAP_STYLE = '../map/style.json';
 
 /** Радиус прибытия по умолчанию, м. */
 const DEFAULT_RADIUS_M = 20;
@@ -571,7 +571,7 @@ const player = {
     this.current = this.queue.shift() || null;
     onAudio();
     if (!this.current) { this.el.pause(); return; }
-    this.el.src = `audio/${this.current}.mp3`;
+    this.el.src = `../audio/${this.current}.mp3`;
     const p = this.el.play();
     if (p) p.catch(() => { this.queue = []; this.current = null; onAudio(); });
   },
@@ -986,7 +986,7 @@ function drawMap() {
     const el = document.createElement('div');
     if (J.isFound(i) && pos < j.position) {
       el.className = 'stop-pin done';
-      el.innerHTML = `<img src="stickers/${stop.sticker}.webp" alt="">`;
+      el.innerHTML = `<img src="../stickers/${stop.sticker}.webp" alt="">`;
     } else {
       el.className = 'stop-pin' + (i === target ? ' target' : pos < j.position ? ' dim' : '');
       el.textContent = String(pos + 1);
@@ -1304,7 +1304,7 @@ function celebrate(sticker, title, subtitle, onDone) {
       `animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * 0.5}s"></i>`;
   }
   $overlay.innerHTML = `<div class="celebrate">${confetti}<div class="box">` +
-    `<img class="sticker" src="stickers/${sticker}.webp" alt="">` +
+    `<img class="sticker" src="../stickers/${sticker}.webp" alt="">` +
     `<div class="t">${esc(title)}</div><div class="s">${esc(subtitle)}</div></div></div>`;
   setTimeout(() => {
     $overlay.innerHTML = '';
@@ -1520,7 +1520,7 @@ async function renderCollage(found, badge) {
     const rowLeft = MARGIN + (L.cols - inRow) * (L.cellW + GAP) / 2;
     const left = rowLeft + col * (L.cellW + GAP) + (L.cellW - CARD_W) / 2;
     const top = HEADER + row * (L.cellH + GAP) + (L.cellH - CARD_H) / 2;
-    const [photo, st] = await Promise.all([loadImage(Photos.url(i)), loadImage(`stickers/${stop.sticker}.webp`).catch(() => null)]);
+    const [photo, st] = await Promise.all([loadImage(Photos.url(i)), loadImage(`../stickers/${stop.sticker}.webp`).catch(() => null)]);
     g.save();
     // Карточки чуть наклонены в разные стороны — как фото, приклеенные в альбом.
     g.translate(left + CARD_W / 2, top + CARD_H / 2);
@@ -1540,10 +1540,10 @@ async function renderCollage(found, badge) {
 
   const footTop = H - FOOTER;
   const art = FOOTER - 40;
-  const trosha = await loadImage('stickers/trosha.webp').catch(() => null);
+  const trosha = await loadImage('../stickers/trosha.webp').catch(() => null);
   if (trosha) fit(trosha, MARGIN, footTop + 20, art, art);
   if (badge) {
-    const b = await loadImage(`stickers/${route.badge}.webp`).catch(() => null);
+    const b = await loadImage(`../stickers/${route.badge}.webp`).catch(() => null);
     if (b) fit(b, W - MARGIN - art, footTop + 20, art, art);
     g.fillStyle = '#d2463c'; g.font = font(60, true);
     g.fillText('Юный караванщик!', W / 2, footTop + FOOTER / 2 + 20);
@@ -1701,9 +1701,9 @@ async function renderDiploma(name, found, date) {
     W / 2, 880, W - 2 * M - 260, 68, 4);
 
   const [badge, trosha, ...items] = await Promise.all([
-    loadImage(`stickers/${route.badge}.webp`).catch(() => null),
-    loadImage('stickers/trosha.webp').catch(() => null),
-    ...found.map(i => loadImage(`stickers/${route.stops[i].sticker}.webp`).catch(() => null)),
+    loadImage(`../stickers/${route.badge}.webp`).catch(() => null),
+    loadImage('../stickers/trosha.webp').catch(() => null),
+    ...found.map(i => loadImage(`../stickers/${route.stops[i].sticker}.webp`).catch(() => null)),
   ]);
   if (badge) fit(badge, (W - 520) / 2, 1110, 520, 520);
   g.fillStyle = '#d2463c'; g.font = font(96, true);
@@ -1730,7 +1730,7 @@ async function renderDiploma(name, found, date) {
 /* ================= Экраны ================= */
 
 const sticker = (name, cls = '', size = '') =>
-  `<img class="sticker ${cls}" src="stickers/${name}.webp" alt="" ${size ? `style="width:${size}px;height:${size}px"` : ''}>`;
+  `<img class="sticker ${cls}" src="../stickers/${name}.webp" alt="" ${size ? `style="width:${size}px;height:${size}px"` : ''}>`;
 const mystery = (size = 40, font = 22) => `<div class="mystery" style="width:${size}px;height:${size}px;font-size:${font}px">?</div>`;
 
 function stickerRow(stops) {
@@ -1746,7 +1746,7 @@ window.addEventListener('beforeinstallprompt', e => {
   if (S.screen === 'home') render();
 });
 
-const APP_URL = 'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/';
+const APP_URL = 'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/progulka/';
 /** Встроенные браузеры Telegram, ВК, MAX, Instagram и т. п.: там часто нет геопозиции и звука. */
 const inAppBrowser = /Telegram|VKClient|vkontakte|Instagram|FBAN|FBAV|OKApp|OneMe|; wv\)/i.test(navigator.userAgent);
 
@@ -1844,7 +1844,7 @@ function homeScreen() {
     ${mustOpenInBrowser() ? '' : installHint()}
     ${j.found.length || j.badge ? `<button class="link" data-act="reset">Очистить альбом</button>` : ''}
     <div id="offline-progress">${offlineProgress()}</div>
-    <a class="link muted" href="site/" style="font-size:14px;min-height:0;padding:4px">О проекте «Маленький караван»</a>
+    <a class="link muted" href="../" style="font-size:14px;min-height:0;padding:4px">О проекте «Маленький караван»</a>
     <button class="link muted" data-act="about" style="font-size:12px;opacity:.7;min-height:0;padding:4px">Веб-версия ${APP_VERSION}</button>
   </div>`;
 }
@@ -2230,9 +2230,9 @@ $app.addEventListener('touchend', e => {
 
 async function boot() {
   const [r, p, st] = await Promise.all([
-    fetch('data/route.json').then(x => x.json()),
-    fetch('data/paths.json').then(x => x.json()),
-    fetch('data/streets.json').then(x => x.json()).catch(() => null),
+    fetch('../data/route.json').then(x => x.json()),
+    fetch('../data/paths.json').then(x => x.json()),
+    fetch('../data/streets.json').then(x => x.json()).catch(() => null),
   ]);
   if (st && st.nodes && st.edges) streets = new StreetGraph(st.nodes, st.edges);
   route = r;

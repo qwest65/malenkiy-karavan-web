@@ -5,7 +5,7 @@
     python3 tools/make_qr.py
 
 Адрес — в URL ниже. В QR-код он записан латиницей (xn--…): так его прочитает любая камера,
-а телефон покажет и откроет маленький-караван.рф.
+а телефон откроет прогулку на маленький-караван.рф.
 """
 from pathlib import Path
 
@@ -13,7 +13,7 @@ import qrcode
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-URL = "https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/"
+URL = "https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/progulka/"
 SIZE = 900
 COLOR = (59, 36, 21)
 

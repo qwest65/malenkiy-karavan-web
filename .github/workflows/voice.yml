@@ -7,7 +7,7 @@ name: Voice
 #   API-ключ сервисного аккаунта Яндекс Облака с ролью ai.speechkit-tts.user
 #   (Settings → Secrets and variables → Actions → New repository secret).
 # site-facts — озвучить ответы на карточках «Знаешь ли ты?» сайта проекта (site/audio/factN.mp3)
-#   тем же голосом рассказчика. Запускать после правки текста карточек в site/index.html.
+#   тем же голосом рассказчика. Запускать после правки текста карточек в index.html (сайт проекта — главная страница).
 # yandex-samples — образцы голосов Яндекса (заодно проверка ключа).
 # samples — образцы бесплатных голосов Microsoft Edge.
 # all — переозвучить всё голосами Edge, включая Трошу (заменит голос ElevenLabs).
@@ -130,9 +130,9 @@ jobs:
             exit 0
           fi
           # Новая версия кэша — чтобы телефоны забрали новую озвучку.
-          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" sw.js)
-          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" sw.js
-          git add sw.js
+          n=$(sed -n "s/^const VERSION = 'v\([0-9]*\)';/\1/p" progulka/sw.js)
+          sed -i "s/^const VERSION = 'v$n';/const VERSION = 'v$((n + 1))';/" progulka/sw.js
+          git add progulka/sw.js
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Voice-over: $MODE"
