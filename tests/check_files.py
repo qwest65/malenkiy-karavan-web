@@ -75,6 +75,13 @@ trip = next(g for g in ld["@graph"] if g["@type"] == "TouristTrip")
 names = [i["item"]["name"] for i in trip["itinerary"]["itemListElement"]]
 if names != [route["stops"][i]["title"] for i in route["default_order"]]:
     errors.append("точки в разметке schema.org на главной (index.html) не совпадают с data/route.json")
+# Вопросы в разметке FAQPage — те же, что в разделе «Вопросы и ответы» (после правки обновите обе).
+blocks = [json.loads(b) for b in re.findall(r'<script type="application/ld\+json">(.*?)</script>', site, re.S)]
+faq = next((b for b in blocks if b.get("@type") == "FAQPage"), None)
+shown = [re.sub(r"^[^\wА-Яа-яЁё]+", "", re.sub(r"<[^>]+>", "", q)).strip()
+         for q in re.findall(r"<details><summary>(.*?)</summary>", site)]
+if not faq or [q["name"] for q in faq["mainEntity"]] != shown:
+    errors.append("вопросы в разметке FAQPage на главной (index.html) не совпадают с разделом «Вопросы и ответы»")
 
 if errors:
     print("\n".join(errors))

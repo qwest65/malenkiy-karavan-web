@@ -2,5 +2,17 @@ User-agent: *
 Allow: /
 Disallow: /tests/
 Disallow: /tools/
+# Кусочки карты и служебный список файлов — не страницы, искать в них нечего.
+Disallow: /map/tiles/
+Disallow: /.deploy-manifest.json
+
+# Яндекс: ?v=… в ссылках только обновляет карточку в мессенджерах — это та же страница.
+User-agent: Yandex
+Allow: /
+Disallow: /tests/
+Disallow: /tools/
+Disallow: /map/tiles/
+Disallow: /.deploy-manifest.json
+Clean-param: v
 
 Sitemap: https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/sitemap.xml
