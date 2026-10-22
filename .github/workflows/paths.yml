@@ -1,10 +1,17 @@
 name: Walking paths
 
-# Карта улиц центра без дворов и пешеходные линии прогулки строятся здесь: результат
+# Карта улиц Троицка без дворов и пешеходные линии прогулки строятся здесь: результат
 # коммитится в data/streets.json и data/paths.json, и прогулка работает с ними без интернета.
 # Картинка-проверка — tools/preview/route-preview.png.
+# В pull request с правкой tools/build_streets.py линии и картинка коммитятся в ветку PR —
+# их можно посмотреть до слияния.
 on:
   push:
+    branches: ["main"]
+    paths:
+      - "data/route.json"
+      - "tools/build_streets.py"
+  pull_request:
     branches: ["main"]
     paths:
       - "data/route.json"
@@ -23,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Build streets and walking paths
         run: |

@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Карта улиц центра Троицка и пешеходные линии маршрута «Маленького каравана».
+"""Карта улиц Троицка и пешеходные линии маршрута «Маленького каравана».
 
-1. Скачивает из OpenStreetMap (Overpass API) дороги и дорожки исторического центра.
+1. Скачивает из OpenStreetMap (Overpass API) дороги и дорожки всего города — тот же
+   квадрат 20 × 20 км, что и своя карта (tools/build_map.py).
 2. Оставляет только то, где ходят с детьми: улицы, тротуары, переходы, пешеходные
    улицы и дорожки скверов и площадей. Внутриквартальные проезды, парковки, тропинки
    и дорожки во дворах выбрасываются — дворы бывают закрыты.
+   Главные улицы, тротуары и скверы «дешевле» переулков, а грунтовки ещё дороже
+   (walk_factor): путь выходит чуть длиннее, но идёт по знакомым улицам.
 3. Сохраняет граф в data/streets.json: по нему прогулка прямо на телефоне,
-   без интернета, строит путь «от меня до точки» и перестраивает его, если свернули.
+   без интернета, строит путь «от меня до точки» из любого места города
+   и перестраивает его, если свернули.
 4. Тем же алгоритмом строит линии между любыми двумя точками маршрута
    в data/paths.json.
 5. Рисует картинку-проверку tools/preview/route-preview.png: все линии маршрута
@@ -42,13 +46,24 @@ OVERPASS = [
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ]
 USER_AGENT = "MalenkiyKaravan-build/1.0 (+https://github.com/qwest65/malenkiy-karavan-web)"
-# Запас вокруг точек маршрута, градусы (~500 м): чтобы строить путь и с соседних улиц.
+# Улицы берём на квадрат вокруг середины маршрута, км — как своя карта: весь город с окраинами,
+# чтобы путь от дома до первой точки строился по тем же правилам и без интернета.
+AREA_KM = 20
+# Для картинки-проверки: запас вокруг точек маршрута, градусы (~500 м).
 MARGIN = 0.005
+# Узлы на изгибах улиц, отстоящие от прямой меньше чем на столько метров, выбрасываются: файл меньше.
+SIMPLIFY_M = 2.0
 
-ROADS = {
-    "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link",
-    "unclassified", "residential", "living_street", "road",
-}
+# «Цена» улицы — во сколько раз путь по ней дороже его длины. Главные улицы — ×1;
+# жилые улицы и переулки дороже: путь по ним выбирается, только если в обход заметно длиннее.
+MAIN_ROADS = {"primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link"}
+MINOR_ROADS = {"residential": 1.6, "unclassified": 1.8, "living_street": 1.8, "road": 1.8}
+# С тротуаром вдоль (sidewalk=both/left/right) жилая улица почти как главная.
+SIDEWALK_ROAD = 1.2
+# Грунт, гравий, щебёнка и т. п. — ещё дороже, во столько раз.
+UNPAVED = {"unpaved", "ground", "dirt", "earth", "mud", "sand", "grass", "gravel", "fine_gravel",
+           "compacted", "pebblestone", "rock", "grass_paver", "woodchips"}
+UNPAVED_FACTOR = 1.5
 OPEN_SPACE = {("leisure", "park"), ("leisure", "garden"), ("place", "square"), ("landuse", "recreation_ground")}
 
 EARTH = 6_371_008.8
@@ -145,7 +160,7 @@ def overpass(query):
         for attempt in range(3):
             try:
                 request = urllib.request.Request(url, data=body, headers={"User-Agent": USER_AGENT})
-                with urllib.request.urlopen(request, timeout=120) as response:
+                with urllib.request.urlopen(request, timeout=300) as response:
                     return json.load(response)
             except (OSError, ValueError) as error:
                 last = error
@@ -162,8 +177,19 @@ def walk_factor(tags, in_open_space):
         return None
     if tags.get("access") in ("private", "no") and foot not in ("yes", "designated", "permissive"):
         return None
-    if hw in ROADS or hw == "pedestrian":
+    factor = base_factor(tags, hw, foot, in_open_space)
+    if factor is not None and tags.get("surface") in UNPAVED:
+        factor *= UNPAVED_FACTOR
+    return factor
+
+
+def base_factor(tags, hw, foot, in_open_space):
+    if hw in MAIN_ROADS or hw == "pedestrian":
         return 1.0
+    if hw in MINOR_ROADS:
+        sidewalk = tags.get("sidewalk") in ("both", "left", "right", "yes", "separate") or any(
+            tags.get(f"sidewalk:{side}") in ("yes", "separate") for side in ("both", "left", "right"))
+        return min(SIDEWALK_ROAD, MINOR_ROADS[hw]) if sidewalk else MINOR_ROADS[hw]
     if hw == "footway":
         if tags.get("footway") in ("sidewalk", "crossing") or tags.get("name"):
             return 1.0
@@ -179,9 +205,9 @@ def walk_factor(tags, in_open_space):
 
 def load_streets(south, west, north, east):
     bbox = f"{south},{west},{north},{east}"
-    ways = overpass(f'[out:json][timeout:90];way["highway"]({bbox});(._;>;);out body;')
+    ways = overpass(f'[out:json][timeout:240][maxsize:536870912];way["highway"]({bbox});(._;>;);out body;')
     areas = overpass(
-        f"[out:json][timeout:90];("
+        f"[out:json][timeout:240];("
         f'way["leisure"~"^(park|garden)$"]({bbox});way["place"="square"]({bbox});'
         f'way["landuse"="recreation_ground"]({bbox});way["highway"="pedestrian"]["area"="yes"]({bbox});'
         f'relation["leisure"~"^(park|garden)$"]({bbox});relation["place"="square"]({bbox});'
@@ -303,6 +329,46 @@ class Graph:
         print(f"граф: {len(coords)} узлов, {len(edges)} отрезков (отброшено {len(self.coords) - len(coords)} несвязанных узлов)")
         return Graph(coords, edges)
 
+    def simplified(self, tolerance):
+        """Тот же граф без лишних узлов на изгибах: перекрёстки и смена «цены» сохраняются,
+        промежуточные точки улицы — только там, где без них линия ушла бы больше tolerance метров."""
+        edge_of = {}
+        for a, b, f in self.edges:
+            edge_of[(a, b)] = edge_of[(b, a)] = f
+        nbrs = [[] for _ in self.coords]
+        for a, b, _ in self.edges:
+            nbrs[a].append(b)
+            nbrs[b].append(a)
+
+        def joint(n):
+            return len(nbrs[n]) != 2 or edge_of[(n, nbrs[n][0])] != edge_of[(n, nbrs[n][1])]
+
+        done, out = set(), []
+
+        def walk(start, nxt):
+            chain = [start, nxt]
+            done.add((min(start, nxt), max(start, nxt)))
+            while not joint(chain[-1]) and chain[-1] != start:
+                u, v = chain[-2], chain[-1]
+                w = nbrs[v][0] if nbrs[v][0] != u else nbrs[v][1]
+                done.add((min(v, w), max(v, w)))
+                chain.append(w)
+            keep = rdp(chain, self.coords, tolerance)
+            f = edge_of[(chain[0], chain[1])]
+            out.extend((a, b, f) for a, b in zip(keep, keep[1:]) if a != b)
+
+        for n in range(len(self.coords)):
+            if joint(n):
+                for m in nbrs[n]:
+                    if (min(n, m), max(n, m)) not in done:
+                        walk(n, m)
+        for a, b, _ in self.edges:  # кольца без перекрёстков
+            if (min(a, b), max(a, b)) not in done:
+                walk(a, b)
+        used = sorted({n for a, b, _ in out for n in (a, b)})
+        remap = {n: i for i, n in enumerate(used)}
+        return Graph([self.coords[n] for n in used], [(remap[a], remap[b], f) for a, b, f in out])
+
     def snap(self, p):
         """Ближайшая точка сети дорожек: (ребро, t, точка, расстояние)."""
         best = None
@@ -354,6 +420,21 @@ class Graph:
         return despike(out)
 
 
+def rdp(chain, coords, tolerance):
+    """Рамер — Дуглас — Пекер: узлы цепочки, без которых линия отходит больше чем на tolerance м."""
+    if len(chain) < 3:
+        return list(chain)
+    a, b = coords[chain[0]], coords[chain[-1]]
+    worst, at = 0.0, 0
+    for k in range(1, len(chain) - 1):
+        d = project(coords[chain[k]], a, b)[1]
+        if d > worst:
+            worst, at = d, k
+    if worst <= tolerance:
+        return [chain[0], chain[-1]]
+    return rdp(chain[:at + 1], coords, tolerance)[:-1] + rdp(chain[at:], coords, tolerance)
+
+
 def despike(points):
     """Убирает «хвостики»: короткий заход в сторону и возврат по той же линии."""
     pts = list(points)
@@ -397,14 +478,21 @@ def render(kept, dropped, stops, titles, order, legs, radii):
 
     lat0 = sum(s[0] for s in stops) / len(stops)
     kx = math.cos(math.radians(lat0))
+    s_, n_ = min(p[0] for p in stops) - 0.004, max(p[0] for p in stops) + 0.004
+    w_, e_ = min(p[1] for p in stops) - 0.007, max(p[1] for p in stops) + 0.007
+    near = lambda pts: any(s_ <= p[0] <= n_ and w_ <= p[1] <= e_ for p in pts)  # noqa: E731
+    kept = [k for k in kept if near(k[2])]
+    dropped = [d for d in dropped if near(d[2])]
     fig, ax = plt.subplots(figsize=(14, 18), dpi=150)
     ax.set_facecolor("#f6f1e7")
     for _, _, pts in dropped:
         ax.plot([p[1] * kx for p in pts], [p[0] for p in pts], color="#e8a0a0", lw=0.8, ls=(0, (2, 2)), zorder=1)
     for ring in WALK_AREAS.values():
         ax.fill([p[1] * kx for p in ring], [p[0] for p in ring], color="#7cc84a", alpha=0.25, zorder=0)
-    for _, _, pts in kept:
-        ax.plot([p[1] * kx for p in pts], [p[0] for p in pts], color="#9a9a9a", lw=1.4, zorder=2)
+    for _, factor, pts in kept:
+        # Чем «дешевле» улица, тем темнее и толще: по таким путь и выбирается.
+        color, lw = ("#5f5f5f", 1.9) if factor <= 1.05 else ("#9a9a9a", 1.4) if factor <= 1.25 else ("#cdbfae", 1.1)
+        ax.plot([p[1] * kx for p in pts], [p[0] for p in pts], color=color, lw=lw, zorder=2)
     for pts in MANUAL_PATHS.values():
         ax.plot([p[1] * kx for p in pts], [p[0] for p in pts], color="#2e9e4f", lw=2.2, zorder=2)
     for k, (i, j) in enumerate(zip(order, order[1:])):
@@ -431,8 +519,9 @@ def render(kept, dropped, stops, titles, order, legs, radii):
     ax.set_xticks([])
     ax.set_yticks([])
     total = sum(length(legs[(i, j)]) for i, j in zip(order, order[1:]))
-    ax.set_title(f"«Весь маршрут»: {total:.0f} м. Серое — улицы и тротуары, по которым строим путь;\n"
-                 f"розовый пунктир — отброшенные дворы, проезды и тропинки; зелёное — скверы и дорожки, проложенные вручную; круги — радиус прибытия", fontsize=12)
+    ax.set_title(f"«Весь маршрут»: {total:.0f} м. Тёмное — главные улицы и тротуары, серое — жилые с тротуаром,\n"
+                 f"бежевое — переулки и грунтовки (путь по ним «дороже»); розовый пунктир — отброшенные дворы и тропинки;\n"
+                 f"зелёное — скверы и дорожки, проложенные вручную; круги — радиус прибытия", fontsize=12)
     PREVIEW.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(PREVIEW)
@@ -448,11 +537,11 @@ def main():
     titles = [s["title"] for s in route["stops"]]
     radii = [s.get("radius", 20) for s in route["stops"]]
 
-    south = min(p[0] for p in stops) - MARGIN
-    north = max(p[0] for p in stops) + MARGIN
-    west = min(p[1] for p in stops) - MARGIN * 1.7
-    east = max(p[1] for p in stops) + MARGIN * 1.7
-    nodes, kept, dropped = load_streets(south, west, north, east)
+    lat0 = (min(p[0] for p in stops) + max(p[0] for p in stops)) / 2
+    lon0 = (min(p[1] for p in stops) + max(p[1] for p in stops)) / 2
+    dlat = AREA_KM / 2 / 111.32
+    dlon = dlat / math.cos(math.radians(lat0))
+    nodes, kept, dropped = load_streets(lat0 - dlat, lon0 - dlon, lat0 + dlat, lon0 + dlon)
     graph = Graph.build(nodes, kept, MANUAL_PATHS.values())
 
     for i, p in enumerate(stops):
@@ -478,11 +567,13 @@ def main():
         "legs": out_legs,
     }, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
 
+    small = graph.simplified(SIMPLIFY_M)
+    print(f"для телефона: {len(small.coords)} узлов, {len(small.edges)} отрезков")
     STREETS.write_text(json.dumps({
         "source": "© участники OpenStreetMap (ODbL)",
         # Узлы подряд: широта, долгота; отрезки подряд: узел, узел, «цена» ×100.
-        "nodes": [round(v, 6) for c in graph.coords for v in c],
-        "edges": [v for a, b, f in graph.edges for v in (a, b, round(f * 100))],
+        "nodes": [round(v, 5) for c in small.coords for v in c],
+        "edges": [v for a, b, f in small.edges for v in (a, b, round(f * 100))],
     }, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"записано: {PATHS.relative_to(REPO)}, {STREETS.relative_to(REPO)} ({STREETS.stat().st_size // 1024} КБ)")
 

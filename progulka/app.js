@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.20';
+const APP_VERSION = '1.21';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -320,7 +320,7 @@ function enableCompass() {
 const between = (a, b) => legs.get(`${a}-${b}`) || null;
 
 /**
- * Улицы и тротуары центра Троицка без дворов (как StreetGraph.kt): по ним прямо в телефоне,
+ * Улицы и тротуары Троицка без дворов (как StreetGraph.kt): по ним прямо в телефоне,
  * без интернета, строится путь «от меня до точки».
  */
 class StreetGraph {
@@ -363,7 +363,7 @@ class StreetGraph {
     return best;
   }
 
-  /** Путь по улицам от from до to ([lat, lon]); null — одна из точек дальше 150 м от улиц центра. */
+  /** Путь по улицам от from до to ([lat, lon]); null — одна из точек дальше 150 м от улиц города. */
   route(from, to, maxSnap = 150) {
     const s = this.snap(from[0], from[1]);
     const g = this.snap(to[0], to[1]);
@@ -477,7 +477,7 @@ async function onlineRoute(from, to) {
   return null;
 }
 
-/** Пешеходный путь у OSRM (профиль foot), если мы далеко от улиц центра. Без интернета — null. */
+/** Пешеходный путь у OSRM (профиль foot), если мы далеко от улиц города (за его пределами). Без интернета — null. */
 async function osrmRoute(from, to) {
   const url = `https://routing.openstreetmap.de/routed-foot/route/v1/driving/` +
     `${from[1].toFixed(6)},${from[0].toFixed(6)};${to[1].toFixed(6)},${to[0].toFixed(6)}?overview=full&geometries=geojson`;
@@ -820,7 +820,7 @@ function updateGuidance() {
   }
 }
 
-/** Свернули или пути ещё нет — строим от того места, где стоим: по улицам центра, а если далеко — у OSRM. */
+/** Свернули или пути ещё нет — строим от того места, где стоим: по улицам города, а если далеко — у OSRM. */
 function reroute(fix, target, hasPath) {
   const now = Date.now();
   if (now - G.lastReroute < OFFLINE_INTERVAL_MS) return;
@@ -1998,7 +1998,7 @@ function updateWalkView() {
   if (src) {
     const text = {
       leg: 'Путь: линия маршрута',
-      streets: 'Путь: по улицам центра',
+      streets: 'Путь: по улицам Троицка',
       osrm: 'Путь: через интернет (OSRM)',
       valhalla: 'Путь: через интернет (Valhalla)',
       pending: 'Путь: спрашиваем у сервиса маршрутов…',
