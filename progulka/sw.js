@@ -3,7 +3,7 @@
  * сохраняется в телефоне, вместе со своей картой Троицка (папка map/).
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v24';
+const VERSION = 'v25';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 const FONT_CACHE = 'karavan-fonts';

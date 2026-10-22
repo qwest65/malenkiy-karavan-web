@@ -4,7 +4,8 @@
     pip install qrcode pillow
     python3 tools/make_qr.py
 
-Адрес — в URL ниже: прогулка на malenkiy-karavan.ru.
+Адрес — в URL ниже. В QR-код он записан латиницей (xn--…): так его прочитает любая камера,
+а телефон откроет прогулку на маленький-караван.рф.
 """
 from pathlib import Path
 
@@ -12,7 +13,7 @@ import qrcode
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-URL = "https://malenkiy-karavan.ru/progulka/"
+URL = "https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/progulka/"
 SIZE = 900
 COLOR = (59, 36, 21)
 
