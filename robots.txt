@@ -3,4 +3,4 @@ Allow: /
 Disallow: /tests/
 Disallow: /tools/
 
-Sitemap: https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/sitemap.xml
+Sitemap: https://malenkiy-karavan.ru/sitemap.xml

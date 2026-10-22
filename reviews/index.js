@@ -14,12 +14,12 @@
  * Переменные окружения функции:
  *   GITHUB_TOKEN   — токен GitHub с правом Issues: Read and write на репозиторий отзывов
  *   REVIEWS_REPO   — закрытый репозиторий отзывов (по умолчанию qwest65/malenkiy-karavan-otzyvy)
- *   ALLOW_ORIGIN   — откуда разрешено присылать отзывы (по умолчанию https://маленький-караван.рф)
+ *   ALLOW_ORIGIN   — откуда разрешено присылать отзывы (по умолчанию https://malenkiy-karavan.ru)
  */
 'use strict';
 
 const REPO = process.env.REVIEWS_REPO || 'qwest65/malenkiy-karavan-otzyvy';
-const ORIGIN = process.env.ALLOW_ORIGIN || 'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai';
+const ORIGIN = process.env.ALLOW_ORIGIN || 'https://malenkiy-karavan.ru';
 const MAX_NAME = 40;
 const MAX_TEXT = 1000;
 const NET_MS = 5000;
