@@ -14,23 +14,28 @@
  * Переменные окружения функции:
  *   GITHUB_TOKEN   — токен GitHub с правом Issues: Read and write на репозиторий отзывов
  *   REVIEWS_REPO   — закрытый репозиторий отзывов (по умолчанию qwest65/malenkiy-karavan-otzyvy)
- *   ALLOW_ORIGIN   — откуда разрешено присылать отзывы (по умолчанию https://маленький-караван.рф, латиницей xn----7sbbaalryjidglrj8b2n.xn--p1ai)
+ *   ALLOW_ORIGIN   — откуда разрешено присылать отзывы, через запятую (по умолчанию маленький-караван.рф
+ *                    и malenkiy-karavan.ru, с www и без; кириллический адрес — латиницей, xn--…)
  */
 'use strict';
 
 const REPO = process.env.REVIEWS_REPO || 'qwest65/malenkiy-karavan-otzyvy';
-const ORIGIN = process.env.ALLOW_ORIGIN || 'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai';
+const ORIGINS = (process.env.ALLOW_ORIGIN ||
+  'https://xn----7sbbaalryjidglrj8b2n.xn--p1ai,https://www.xn----7sbbaalryjidglrj8b2n.xn--p1ai,' +
+  'https://malenkiy-karavan.ru,https://www.malenkiy-karavan.ru').split(',').map(o => o.trim()).filter(Boolean);
 const MAX_NAME = 40;
 const MAX_TEXT = 1000;
 const NET_MS = 5000;
 // Не чаще одного отзыва в минуту с одного адреса — от случайных повторов и простого спама.
 const recent = new Map();
 
-const cors = {
-  'Access-Control-Allow-Origin': ORIGIN,
+// Браузер пускает ответ, только если в нём назван адрес страницы, — отвечаем тем из разрешённых, откуда пришли.
+const corsFor = (origin) => ({
+  'Access-Control-Allow-Origin': ORIGINS.includes(origin) ? origin : ORIGINS[0],
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
-};
+  Vary: 'Origin',
+});
 const reply = (statusCode, body, headers = {}) => ({
   statusCode, headers: { 'Content-Type': 'application/json; charset=utf-8', ...headers }, body: JSON.stringify(body),
 });
@@ -53,7 +58,7 @@ async function github(method, path, body) {
   return r.json();
 }
 
-async function newReview(event, headers) {
+async function newReview(event, headers, cors) {
   const raw = event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : event.body || '';
   let data;
   try { data = JSON.parse(raw); } catch (_) { return reply(400, { error: 'bad json' }, cors); }
@@ -74,8 +79,9 @@ async function newReview(event, headers) {
 
 module.exports.handler = async (event) => {
   const method = event.httpMethod;
-  if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
   const headers = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  const cors = corsFor(headers.origin);
+  if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
   if (method === 'GET' && event.queryStringParameters?.check === '1') {
     try {
       if (!process.env.GITHUB_TOKEN) throw new Error('не задан GITHUB_TOKEN');
@@ -87,7 +93,7 @@ module.exports.handler = async (event) => {
   }
   if (method !== 'POST') return reply(405, { error: 'POST only' });
   try {
-    return await newReview(event, headers);
+    return await newReview(event, headers, cors);
   } catch (e) {
     console.error(e);
     return reply(502, { error: 'не удалось сохранить отзыв' }, cors);
