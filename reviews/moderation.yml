@@ -6,23 +6,40 @@
 #   Close as not planned           → не публикуется;
 #   Reopen                         → снимается с сайта;
 #   правка текста закрытой задачи   → на сайте обновляется текст.
+# Новый отзыв получает комментарий от github-actions: GitHub не присылает уведомления
+# о собственных задачах (их создаёт функция с вашим токеном), а о комментарии — присылает.
 # Секрет SITE_TOKEN — токен GitHub с правом Contents: Read and write на репозиторий сайта.
 name: Moderation
 
 on:
   issues:
-    types: [closed, reopened, edited]
+    types: [opened, closed, reopened, edited]
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: reviews
   cancel-in-progress: false
 
 jobs:
+  notify:
+    if: github.event.action == 'opened' && startsWith(github.event.issue.title, 'Отзыв:')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment (sends a push to the phone)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Новый отзыв с сайта.
+
+          - Опубликовать: **Close issue** (закрыть как выполненную).
+          - Не публиковать: стрелка рядом с Close → **Close as not planned**.
+          - Опечатку можно поправить в тексте задачи (⋯ → Edit) до или после публикации."
+
   publish:
-    if: startsWith(github.event.issue.title, 'Отзыв:')
+    if: github.event.action != 'opened' && startsWith(github.event.issue.title, 'Отзыв:')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
