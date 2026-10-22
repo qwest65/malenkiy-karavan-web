@@ -305,8 +305,10 @@
     .review .stars { color: #f2a100; font-size: 1.2rem; letter-spacing: 2px; margin: 0 0 6px; }
     .review .by { font-weight: 800; color: var(--accent-dark); display: grid; gap: 2px; }
     .review .by time { font-weight: 600; color: var(--muted); font-size: .95rem; }
-    .reviews-more { display: block; margin: 18px auto 0; border: 3px solid #ffd9c2; background: #fff; color: var(--accent-dark); font: inherit; font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 999px; cursor: pointer; }
-    .reviews-more[hidden] { display: none; }
+    .reviews-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 18px; }
+    .reviews-more { border: 3px solid #ffd9c2; background: #fff; color: var(--accent-dark); font: inherit; font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 999px; cursor: pointer; }
+    .reviews-more[hidden], .review-open[hidden], .review-form[hidden] { display: none; }
+    .review-open { border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 1rem; color: #fff; background: var(--accent); padding: 12px 24px; border-radius: 999px; box-shadow: 0 4px 0 var(--accent-dark); }
     /* Оценка в форме: пять звёзд, справа налево — чтобы подсвечивались все до выбранной. */
     .rate { border: 0; margin: 0; padding: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .rate legend { float: left; font-weight: 700; color: var(--brown); padding: 0; }
@@ -317,15 +319,19 @@
     .rate input:focus-visible + label { outline: 3px solid #ffd28f; border-radius: 8px; }
     .rate label:active { transform: scale(1.2); }
     .reviews-empty { color: var(--muted); font-weight: 600; margin: 0; }
-    .review-form { margin-top: 26px; background: #fffaf0; border: 3px dashed #ffd28f; border-radius: 24px; padding: 20px; display: grid; gap: 12px; }
-    .review-form h3 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--brown); }
-    .review-form input:not([type=radio]), .review-form textarea { width: 100%; font: inherit; font-size: 1rem; padding: 12px 14px; border: 2px solid #f1d3a7; border-radius: 16px; background: #fff; color: var(--ink); }
-    .review-form textarea { min-height: 120px; resize: vertical; }
+    .review-form { max-width: 640px; margin: 16px auto 0; background: #fffaf0; border: 3px dashed #ffd28f; border-radius: 22px; padding: 14px 16px; display: grid; gap: 10px; }
+    .review-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .review-close { border: 0; background: none; cursor: pointer; font-size: 1.2rem; line-height: 1; color: var(--muted); padding: 6px 8px; border-radius: 10px; }
+    .review-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+    .review-foot small { flex: 1 1 200px; }
+    .review-form input:not([type=radio]), .review-form textarea { width: 100%; font: inherit; font-size: 1rem; padding: 10px 12px; border: 2px solid #f1d3a7; border-radius: 14px; background: #fff; color: var(--ink); }
+    .review-form textarea { min-height: 84px; resize: vertical; }
     .review-form .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-    .review-form small { color: var(--muted); line-height: 1.4; }
-    .review-form button { justify-self: start; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 1.05rem; color: #fff; background: var(--accent); padding: 13px 26px; border-radius: 999px; box-shadow: 0 5px 0 var(--accent-dark); }
+    .review-form small { color: var(--muted); line-height: 1.35; font-size: .9rem; }
+    .review-form button[type=submit] { border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 1.05rem; color: #fff; background: var(--accent); padding: 11px 24px; border-radius: 999px; box-shadow: 0 4px 0 var(--accent-dark); }
     .review-form button:disabled { opacity: .6; cursor: default; }
-    .review-status { font-weight: 700; margin: 0; }
+    .review-status { font-weight: 700; margin: 10px 0 0; text-align: center; }
+    .review-status:empty { display: none; }
     .review-status.ok { color: var(--green-dark); } .review-status.err { color: #b33a27; }
     .peek { position: absolute; width: 96px; z-index: 2; pointer-events: none; filter: drop-shadow(0 6px 6px rgba(0,0,0,0.18)); animation: wiggle 4s ease-in-out infinite; }
     .peek.r { right: -22px; top: -34px; transform: rotate(12deg); }
@@ -715,26 +721,33 @@
       <h2><span>💬</span>Отзывы</h2>
       <p class="lead">Что говорят те, кто уже погулял с Трошей</p>
       <div class="reviews-list" id="reviews-list"><p class="reviews-empty">Пока отзывов нет — будьте первыми!</p></div>
-      <button class="reviews-more" id="reviews-more" type="button" hidden>Показать ещё</button>
+      <div class="reviews-actions">
+        <button class="reviews-more" id="reviews-more" type="button" hidden>Показать ещё</button>
+        <button class="review-open" id="review-open" type="button" hidden>✍️ Оставить отзыв</button>
+      </div>
       <form class="review-form" id="review-form" hidden>
-        <h3>✍️ Оставить отзыв</h3>
-        <fieldset class="rate">
-          <legend>Ваша оценка:</legend>
-          <span class="stars-input">
-            <input type="radio" name="rating" id="rate5" value="5" required><label for="rate5" title="5 — отлично">★</label>
-            <input type="radio" name="rating" id="rate4" value="4"><label for="rate4" title="4 — хорошо">★</label>
-            <input type="radio" name="rating" id="rate3" value="3"><label for="rate3" title="3 — нормально">★</label>
-            <input type="radio" name="rating" id="rate2" value="2"><label for="rate2" title="2 — так себе">★</label>
-            <input type="radio" name="rating" id="rate1" value="1"><label for="rate1" title="1 — не понравилось">★</label>
-          </span>
-        </fieldset>
+        <div class="review-head">
+          <fieldset class="rate">
+            <legend>Ваша оценка:</legend>
+            <span class="stars-input">
+              <input type="radio" name="rating" id="rate5" value="5" required><label for="rate5" title="5 — отлично">★</label>
+              <input type="radio" name="rating" id="rate4" value="4"><label for="rate4" title="4 — хорошо">★</label>
+              <input type="radio" name="rating" id="rate3" value="3"><label for="rate3" title="3 — нормально">★</label>
+              <input type="radio" name="rating" id="rate2" value="2"><label for="rate2" title="2 — так себе">★</label>
+              <input type="radio" name="rating" id="rate1" value="1"><label for="rate1" title="1 — не понравилось">★</label>
+            </span>
+          </fieldset>
+          <button class="review-close" id="review-close" type="button" aria-label="Свернуть форму">✕</button>
+        </div>
         <input name="name" maxlength="40" required autocomplete="off" placeholder="Имя, например: Мама Маши">
-        <textarea name="text" maxlength="1000" required placeholder="Как прошла прогулка? Что понравилось ребёнку?"></textarea>
+        <textarea name="text" rows="3" maxlength="1000" required placeholder="Как прошла прогулка? Что понравилось ребёнку?"></textarea>
         <input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <small>Отзыв появится на сайте после проверки. Пишите только имя — без фамилии, телефона и адреса.</small>
-        <button type="submit">Отправить отзыв</button>
-        <p class="review-status" id="review-status" role="status"></p>
+        <div class="review-foot">
+          <small>Появится после проверки. Только имя — без фамилии, телефона и адреса.</small>
+          <button type="submit">Отправить</button>
+        </div>
       </form>
+      <p class="review-status" id="review-status" role="status"></p>
     </div>
   </section>
 
@@ -839,11 +852,16 @@
     }).catch(function () { /* без отзывов */ });
 
     var form = document.getElementById('review-form'), status = document.getElementById('review-status');
+    var open = document.getElementById('review-open'), close = document.getElementById('review-close');
     if (!REVIEWS_URL) return;
-    form.hidden = false;
+    // Форма свёрнута в кнопку «Оставить отзыв» — раскрывается по нажатию.
+    function toggle(show) { form.hidden = !show; open.hidden = show; if (show) form.name.focus({ preventScroll: true }); }
+    open.hidden = false;
+    open.addEventListener('click', function () { status.textContent = ''; toggle(true); });
+    close.addEventListener('click', function () { toggle(false); });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var btn = form.querySelector('button');
+      var btn = form.querySelector('button[type=submit]');
       btn.disabled = true;
       status.className = 'review-status';
       status.textContent = 'Отправляем…';
@@ -854,6 +872,7 @@
         if (r.status === 429) throw new Error('Отзыв уже отправлен — подождите минутку.');
         if (!r.ok) throw new Error('Не получилось отправить. Попробуйте ещё раз.');
         form.reset();
+        toggle(false);
         status.className = 'review-status ok';
         status.textContent = 'Спасибо! Отзыв появится на сайте после проверки.';
       }).catch(function (err) {
