@@ -1,0 +1,14 @@
+# Настройки для хостинга (Apache). GitHub Pages этот файл не читает.
+ErrorDocument 404 /404.html
+AddDefaultCharset utf-8
+AddType application/x-protobuf .pbf
+AddType application/manifest+json .webmanifest
+AddType audio/ogg .ogg
+AddType image/webp .webp
+
+<IfModule mod_headers.c>
+  # Service worker и списки файлов всегда свежие — иначе телефоны долго не увидят обновление.
+  <FilesMatch "(sw\.js|files\.json|reviews\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
