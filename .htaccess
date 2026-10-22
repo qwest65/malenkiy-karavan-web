@@ -1,10 +1,12 @@
-# Настройки для хостинга (Apache). GitHub Pages этот файл не читает.
+# Настройки для хостинга (Apache). Действуют только для запросов, которые доходят до Apache:
+# обычные файлы (html, js, картинки) хостинг отдаёт через nginx без них. GitHub Pages файл не читает.
 ErrorDocument 404 /404.html
 AddDefaultCharset utf-8
 AddType application/x-protobuf .pbf
 AddType application/manifest+json .webmanifest
 AddType audio/ogg .ogg
 AddType image/webp .webp
+AddType font/woff2 .woff2
 
 <IfModule mod_headers.c>
   # Service worker и списки файлов всегда свежие — иначе телефоны долго не увидят обновление.
