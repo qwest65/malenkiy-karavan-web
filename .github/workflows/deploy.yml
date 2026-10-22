@@ -60,3 +60,16 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: python3 tools/deploy_ftp.py
+
+      # IndexNow: сообщаем Яндексу (и Bing), что страницы обновились, — так они быстрее попадают в поиск.
+      # Ключ — имя и содержимое файла 2d3d361ce742b2b5b9e2cbaeeaced98e.txt в корне сайта.
+      - name: Сообщить поисковикам
+        if: steps.secrets.outputs.ready == 'true'
+        continue-on-error: true
+        run: |
+          H=xn----7sbbaalryjidglrj8b2n.xn--p1ai
+          KEY=2d3d361ce742b2b5b9e2cbaeeaced98e
+          BODY="{\"host\":\"$H\",\"key\":\"$KEY\",\"keyLocation\":\"https://$H/$KEY.txt\",\"urlList\":[\"https://$H/\",\"https://$H/progulka/\",\"https://$H/site/privacy.html\"]}"
+          for api in https://yandex.com/indexnow https://api.indexnow.org/indexnow; do
+            echo "$api: $(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json; charset=utf-8' -d "$BODY" "$api")"
+          done
