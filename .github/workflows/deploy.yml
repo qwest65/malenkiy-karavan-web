@@ -1,6 +1,6 @@
 name: Deploy
 
-# Выкладка сайта на хостинг (Cloud4box, ISPmanager) по FTP: там у сайта свой сертификат
+# Выкладка сайта на хостинг (Cloud4box, ISPmanager) по FTPS через lftp: там у сайта свой сертификат
 # Let's Encrypt, и он открывается из России без VPN. GitHub Pages остаётся запасной копией.
 #
 # Нужны секреты репозитория (Settings → Secrets and variables → Actions):
@@ -47,29 +47,39 @@ jobs:
         if: steps.secrets.outputs.ready == 'true'
         with:
           ref: main
+          fetch-depth: 0
 
       - name: Файлы и данные на месте
         if: steps.secrets.outputs.ready == 'true'
         run: python3 tests/check_files.py
 
+      # Время файла = время его последнего коммита: тогда lftp заливает только изменённые файлы.
+      - name: Время файлов из истории
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          git ls-files -z | while IFS= read -r -d '' f; do
+            touch -d "@$(git log -1 --format=%ct -- "$f")" "$f"
+          done
+
+      # lftp, а не готовый action: хостинг иногда отказывает в соединении для передачи (425),
+      # lftp переподключается и продолжает с того же места.
       - name: Залить на хостинг
         if: steps.secrets.outputs.ready == 'true'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          local-dir: ./
-          server-dir: ./
-          exclude: |
-            **/.git*
-            **/.git*/**
-            .github/**
-            tools/**
-            tests/**
-            reviews/**
-            samples/**
-            **/__pycache__/**
-            README.md
-            CNAME
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq lftp >/dev/null
+          lftp <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 30
+          set net:max-retries 30
+          set net:reconnect-interval-base 5
+          set net:reconnect-interval-max 30
+          set net:persist-retries 30
+          open --env-password -u "$FTP_USERNAME" "$FTP_SERVER"
+          mirror -R --only-newer --parallel=1 --verbose=1 -x '^\.git' -x '^tools/' -x '^tests/' -x '^reviews/' -x '^samples/' -x '__pycache__' -x '^README\.md$' -x '^CNAME$' ./ ./
+          EOF
