@@ -73,3 +73,19 @@ jobs:
           for api in https://yandex.com/indexnow https://api.indexnow.org/indexnow; do
             echo "$api: $(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json; charset=utf-8' -d "$BODY" "$api")"
           done
+
+      # Сайт открывается после выкладки — и так, как его видят роботы мессенджеров (карточки ссылок).
+      - name: Проверить сайт
+        if: steps.secrets.outputs.ready == 'true'
+        continue-on-error: true
+        run: |
+          H=https://xn----7sbbaalryjidglrj8b2n.xn--p1ai
+          for ua in "Mozilla/5.0" "TelegramBot (like TwitterBot)" "WhatsApp/2.23" "facebookexternalhit/1.1"; do
+            for u in $H/ $H/progulka/ $H/site/images/og.jpg $H/images/og.jpg; do
+              printf "%-32s %-45s " "$ua" "${u#$H}"
+              curl -s -o /tmp/body -A "$ua" -w "%{http_code} %{content_type} %{size_download}B %{time_total}s" "$u"; echo
+            done
+          done
+          curl -s -A "TelegramBot (like TwitterBot)" $H/ | grep -o '<meta property="og:[a-z:]*" content="[^"]*"' | head -5
+          curl -sI -A "TelegramBot (like TwitterBot)" $H/ | head -20
+
