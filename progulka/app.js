@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.22';
+const APP_VERSION = '1.23';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1860,8 +1860,8 @@ function homeScreen() {
     ${mustOpenInBrowser() ? '' : installHint()}
     ${j.found.length || j.badge ? `<button class="link" data-act="reset">Очистить альбом</button>` : ''}
     <div id="offline-progress">${offlineProgress()}</div>
-    <a class="link muted" href="../" style="font-size:14px;min-height:0;padding:4px">О проекте «Маленький караван»</a>
-    <button class="link muted" data-act="about" style="font-size:12px;opacity:.7;min-height:0;padding:4px">Веб-версия ${APP_VERSION}</button>
+    <div class="home-foot"><a class="link muted" href="../">О проекте</a> ·
+      <button class="link muted" data-act="about">Веб-версия ${APP_VERSION}</button></div>
   </div>`;
 }
 

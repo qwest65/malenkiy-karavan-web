@@ -251,36 +251,41 @@ body.home {
   background-color: #78c255; background-repeat: no-repeat;
   min-height: 100dvh;
 }
-.home-page { gap: 16px; }
+/* Всё главное — на одном экране: размеры подстраиваются под высоту телефона (dvh). */
+.home-page { justify-content: center; gap: clamp(6px, 1.4dvh, 14px); padding-top: calc(10px + var(--safe-top)); padding-bottom: calc(10px + var(--safe-bottom)); }
 .fun-title {
-  margin: 8px 0 0; text-align: center; line-height: .92; font-weight: 900; font-size: clamp(40px, 12.5vw, 60px);
+  margin: 4px 0 0; text-align: center; line-height: .92; font-weight: 900; font-size: clamp(32px, min(12.5vw, 6.6dvh), 60px);
   color: #ff6a1f; -webkit-text-stroke: 3px #fff; paint-order: stroke fill;
   text-shadow: 0 5px 0 #c94a0e, 0 10px 16px rgba(0,0,0,.18); transform: rotate(-3deg);
 }
 .fun-title span { display: block; color: #5a2d14; text-shadow: 0 5px 0 #3a1d0b, 0 10px 16px rgba(0,0,0,.18); }
-.home-scene { position: relative; width: 78%; max-width: 360px; margin: 8px 0 14px; animation: sway 4s ease-in-out infinite; }
-.home-scene img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 28px; border: 5px solid #fff;
+.home-scene { position: relative; width: min(74vw, 340px, 33dvh); margin: 4px 0 12px; animation: sway 4s ease-in-out infinite; }
+.home-scene img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 26px; border: 5px solid #fff;
   box-shadow: 0 10px 24px rgba(90,45,20,.25); transform: rotate(2deg); }
-.home-sign { position: absolute; z-index: 2; left: -22px; top: -14px; transform: rotate(-9deg);
-  background: linear-gradient(#a8662f, #8a5226); color: #fff6dc; font-weight: 900; font-size: 16px;
-  padding: 6px 12px; border-radius: 10px; border: 3px solid #6e3f1c; box-shadow: 0 4px 0 #5a3216; }
-.home-bubble { position: absolute; right: -14px; bottom: -18px; background: #fff; border-radius: 18px; padding: 8px 12px;
-  font-weight: 800; font-size: 14px; line-height: 1.2; box-shadow: 0 6px 14px rgba(0,0,0,.15); transform: rotate(-4deg); }
+.home-sign { position: absolute; z-index: 2; left: -26px; top: 14%; transform: rotate(-9deg);
+  background: linear-gradient(#a8662f, #8a5226); color: #fff6dc; font-weight: 900; font-size: 15px;
+  padding: 5px 11px; border-radius: 10px; border: 3px solid #6e3f1c; box-shadow: 0 4px 0 #5a3216; }
+.home-bubble { position: absolute; right: -16px; bottom: -14px; background: #fff; border-radius: 16px; padding: 7px 11px;
+  font-weight: 800; font-size: 13px; line-height: 1.2; box-shadow: 0 6px 14px rgba(0,0,0,.15); transform: rotate(-4deg); }
 .home-bubble b { color: #ff6a1f; }
 @keyframes sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1.5deg) translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) { .home-scene { animation: none; } }
-.home-card { background: #fff7d6; align-items: center; text-align: center; transform: rotate(-1deg);
-  box-shadow: 0 8px 20px rgba(90,45,20,.16); }
+.home-card { background: #fff7d6; align-items: center; text-align: center; transform: rotate(-1deg); gap: 6px;
+  padding: clamp(10px, 1.6dvh, 16px) 14px; box-shadow: 0 8px 20px rgba(90,45,20,.16); }
+.home-card .h2 { font-size: clamp(20px, 3dvh, 24px); }
 .home-card .h2 { font-weight: 900; color: #5a2d14; }
 .home-tags { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .home-tags .tag { font-weight: 800; font-size: 14px; padding: 6px 11px; border-radius: 999px; color: #fff; }
 .t-walk { background: #ff8a2a; } .t-stops { background: #e5533d; } .t-time { background: #1e9be0; }
 .home-items { display: flex; justify-content: center; gap: 2px; flex-wrap: wrap; margin-top: 4px; }
-.home-items .sticker { width: 32px; height: 32px; }
+.home-items .sticker { width: clamp(26px, 3.8dvh, 34px); height: clamp(26px, 3.8dvh, 34px); }
 .home-items .ghost { filter: grayscale(1) brightness(1.15) opacity(.45); }
 .home-items-note { font-size: 13.5px; color: var(--muted); font-weight: 600; }
 .home-page .btn.go, .home-page .btn[data-act="resume"] {
+  min-height: clamp(54px, 7.5dvh, 64px);
   background: linear-gradient(180deg, #ff7a2e, #f0540f); box-shadow: 0 6px 0 #b13a06, 0 12px 20px rgba(0,0,0,.18);
   font-size: 22px; font-weight: 900; }
-.home-page .btn.soft { background: rgba(255,255,255,.78); border: 3px solid #fff; font-weight: 700; color: #5a2d14; }
+.home-page .btn.soft { min-height: clamp(44px, 6dvh, 52px); background: rgba(255,255,255,.78); border: 3px solid #fff; font-weight: 700; color: #5a2d14; }
+.home-foot { font-size: 13px; color: #2d5b1c; display: flex; align-items: center; gap: 4px; }
+.home-foot .link { font-size: 13px; padding: 4px 2px; min-height: 0; }
 .home-page .link.muted { color: #2d5b1c; }
