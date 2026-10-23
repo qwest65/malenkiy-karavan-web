@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.23';
+const APP_VERSION = '1.24';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1876,9 +1876,9 @@ function chooseScreen() {
         <div class="preset-head"><div class="emoji">${p.emoji}</div>
           <div><div class="t">${esc(p.title)}</div>${p.subtitle ? `<div class="s">${esc(p.subtitle)}</div>` : ''}</div></div>
         ${stickerRow(p.stops)}
-        <div style="font-size:15px">${esc(planSummary(p.stops))}</div>
+        ${planTags(p.stops)}
         <div class="row">
-          <button class="btn grow" data-act="go" data-preset="${k}">Идём!</button>
+          <button class="btn grow" data-act="go" data-preset="${k}">🐫 Идём!</button>
           <button class="btn out" data-act="edit" data-preset="${k}">Изменить</button>
         </div>
       </div>`).join('')}
@@ -2045,7 +2045,7 @@ function stopScreen() {
       <button class="link" data-act="backToWalk">← К карте</button>
       <div class="backpack"><span class="ico">🎒</span><span class="cnt"> ${walkFound.size} из ${j.plan.length}</span></div>
     </div>
-    <div class="muted" style="font-size:15px">Точка ${j.position + 1} из ${j.plan.length}</div>
+    <div class="step-pill">Точка ${j.position + 1} из ${j.plan.length}</div>
     <h1 class="h1" style="font-size:26px">${esc(stop.title)}</h1>
     <div class="found-item">${S.revealed ? sticker(stop.sticker) : mystery(140, 80)}</div>
     ${S.revealed ? `<div class="red bold" style="font-size:24px;text-align:center">Нашлось: ${esc(stop.item)}!</div>`
@@ -2160,6 +2160,8 @@ function render() {
   }
   document.body.classList.toggle('walking', walking);
   document.body.classList.toggle('home', S.screen === 'home');
+  // Все экраны, кроме карты, — в том же ярком стиле, что главная и сайт проекта.
+  document.body.classList.toggle('sky', !walking && S.screen !== 'home');
   $mapScreen.hidden = !walking;
   keepAwake(walking);
   const screens = { home: homeScreen, choose: chooseScreen, walk: walkScreen, stop: stopScreen, finale: finaleScreen, album: albumScreen };
