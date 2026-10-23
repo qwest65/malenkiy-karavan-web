@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.24';
+const APP_VERSION = '1.25';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1935,7 +1935,8 @@ function walkScreen() {
       <div id="geo-help"></div>
       ${S.panelOpen ? `
         ${stickerRow(j.plan)}
-        <div class="target">Точка ${j.position + 1} из ${j.plan.length}: ${esc(stop.title)}</div>
+        <div class="step-pill">Точка ${j.position + 1} из ${j.plan.length}</div>
+        <div class="target">${esc(stop.title)}</div>
         <div id="dist-big"></div>
         <div style="font-size:16px">🤝 Держи взрослого за руку</div>
         <div class="row">
@@ -2088,10 +2089,10 @@ function finaleScreen() {
   const r = S.result || { complete: false, found: [] };
   return `<div class="page">
     ${r.complete ? `
-      <div class="red" style="font-size:40px;font-weight:900">Ура!</div>
+      <div class="h1 hooray">Ура!</div>
       ${sticker(route.badge, 'badge-big')}
       <h1 class="h1" style="font-size:28px">Ты — Юный караванщик!</h1>
-      <p class="sub" style="color:var(--ink);font-size:18px">${esc(route.finale.trosha)}</p>`
+      <div class="panel"><div class="who">${sticker('trosha')}Троша</div><p>${esc(route.finale.trosha)}</p></div>`
     : `<h1 class="h1">Прогулка окончена</h1>
       ${sticker('trosha', '', 200)}
       <p class="sub" style="color:var(--ink);font-size:18px">Ничего, продолжим в другой раз! Остальные вещи Троша подождёт.</p>`}
@@ -2111,7 +2112,7 @@ function albumScreen() {
   return `<div class="page">
     <div class="back-row"><button class="link" data-act="home">← Назад</button></div>
     <h1 class="h1">Мой альбом</h1>
-    <div class="muted" style="font-size:17px">Найдено ${j.found.length} из ${route.stops.length}</div>
+    <div class="step-pill">Найдено ${j.found.length} из ${route.stops.length}</div>
     ${Photos.collageUrl ? `<div class="panel">
         <div class="bold" style="font-size:20px">🖼 Коллаж прогулки</div>
         <img class="collage" src="${Photos.collageUrl}" alt="Коллаж из фото прогулки">
@@ -2123,7 +2124,7 @@ function albumScreen() {
       ${route.stops.map((s, i) => {
         const found = J.isFound(i);
         const photo = found ? Photos.url(i) : null;
-        return `<div class="album-card">
+        return `<div class="album-card${found ? ' got' : ''}">
           ${photo ? `<div class="album-photo"><img src="${photo}" alt="Фото: ${esc(s.title)}">${sticker(s.sticker, 'corner')}</div>` : sticker(s.sticker, found ? '' : 'locked')}
           <div class="t ${found ? '' : 'muted'}">${found ? esc(s.item) : 'Ещё не нашли'}</div>
           <div class="s">${esc(s.title)}</div>
@@ -2132,7 +2133,7 @@ function albumScreen() {
             <button class="small" data-act="gallery" data-stop="${i}" aria-label="Фото из галереи">🖼</button></div>` : ''}
         </div>`;
       }).join('')}
-      <div class="album-card wide">${sticker(route.badge, j.badge ? '' : 'locked')}
+      <div class="album-card wide${j.badge ? ' got' : ''}">${sticker(route.badge, j.badge ? '' : 'locked')}
         <div class="t" style="font-size:18px">${j.badge ? 'Юный караванщик' : 'Значок — за прогулку, пройденную до конца'}</div></div>
     </div>
   </div>`;
