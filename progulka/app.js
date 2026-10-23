@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.21';
+const APP_VERSION = '1.22';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1819,18 +1819,34 @@ function showOfflineProgress() {
   if (el) el.innerHTML = offlineProgress();
 }
 
+/** Цветные значки маршрута на главном экране: путь, точки, время. */
+function planTags(plan) {
+  const meters = plan.length > 1 ? planMeters(plan) : null;
+  const time = formatEstimate(Math.round((meters || 0) / KID_WALK_M_PER_MIN) + plan.length * MINUTES_PER_STOP).replace('около ', '');
+  return `<div class="home-tags">
+    ${meters != null ? `<span class="tag t-walk">👣 ${formatDistance(meters)}</span>` : ''}
+    <span class="tag t-stops">📍 ${plan.length} ${pointsWord(plan.length)}</span>
+    <span class="tag t-time">⏱ ${time}</span></div>`;
+}
+
 function homeScreen() {
   const j = S.journey;
-  return `<div class="page">
-    <h1 class="h1">Маленький караван</h1>
+  const total = route.stops.length;
+  // Главный экран — как сайт проекта: небо, Троша у собора, игровой заголовок, вещи, которые предстоит найти.
+  return `<div class="page home-page">
+    <h1 class="fun-title">Маленький<span>караван</span></h1>
     ${mustOpenInBrowser() ? installHint() : ''}
-    ${sticker('trosha', 'trosha-home')}
-    <div class="panel">
+    <div class="home-scene">
+      <div class="home-sign">ТРОИЦК</div>
+      <img src="../site/images/logo.webp" alt="Верблюжонок Троша на фоне Свято-Троицкого собора и карты">
+      <div class="home-bubble">Помоги <b>Троше</b><br>собрать вещи!</div>
+    </div>
+    <div class="panel home-card">
       <div class="h2">${esc(route.title)}</div>
-      <p style="font-size:17px">${esc(route.subtitle)}</p>
-      <div class="muted" style="font-size:15px">${esc(planSummary(route.default_order))}</div>
-      ${j.found.length ? `<div class="red bold" style="font-size:17px">В альбоме ${j.found.length} из ${route.stops.length}</div>
-        ${stickerRow(route.stops.map((_, i) => i))}` : ''}
+      ${planTags(route.default_order)}
+      <div class="home-items">${route.stops.map((st, i) =>
+        `<img class="sticker${J.isFound(i) ? '' : ' ghost'}" src="../stickers/${st.sticker}.webp" alt="">`).join('')}</div>
+      <div class="home-items-note">${j.found.length ? `Найдено ${j.found.length} из ${total} вещей` : `Найди все ${total} вещей Троши!`}</div>
     </div>
     ${J.inProgress ? `
       <div class="panel gold">
@@ -1839,8 +1855,8 @@ function homeScreen() {
       </div>
       <button class="btn" data-act="resume">Продолжить прогулку</button>
       <button class="btn soft" data-act="finish">Завершить прогулку</button>`
-    : `<button class="btn" data-act="choose">Начать прогулку</button>`}
-    <button class="btn soft" data-act="album">Мой альбом</button>
+    : `<button class="btn go" data-act="choose">🐫 Начать прогулку</button>`}
+    <button class="btn soft" data-act="album">📒 Мой альбом</button>
     ${mustOpenInBrowser() ? '' : installHint()}
     ${j.found.length || j.badge ? `<button class="link" data-act="reset">Очистить альбом</button>` : ''}
     <div id="offline-progress">${offlineProgress()}</div>
@@ -2143,6 +2159,7 @@ function render() {
     panelTimer = null;
   }
   document.body.classList.toggle('walking', walking);
+  document.body.classList.toggle('home', S.screen === 'home');
   $mapScreen.hidden = !walking;
   keepAwake(walking);
   const screens = { home: homeScreen, choose: chooseScreen, walk: walkScreen, stop: stopScreen, finale: finaleScreen, album: albumScreen };

@@ -3,7 +3,7 @@
  * сохраняется в телефоне, вместе со своей картой Троицка (папка map/).
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v28';
+const VERSION = 'v29';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 // Прежние кэши подложки с чужого сервера карт и шрифта с серверов Google — больше не нужны.
@@ -14,7 +14,7 @@ const SHELL = [
   '../vendor/maplibre-gl.js', '../vendor/maplibre-gl.css',
   '../data/route.json', '../data/paths.json', '../data/streets.json', '../data/files.json',
   '../icons/icon-192.png', '../icons/icon-512.png', '../icons/apple-touch-icon.png', '../icons/favicon.png', '../images/og.jpg',
-  '../fonts/rubik.css', '../fonts/rubik-cyrillic.woff2', '../fonts/rubik-latin.woff2',
+  '../fonts/rubik.css', '../fonts/rubik-cyrillic.woff2', '../fonts/rubik-latin.woff2', '../site/images/logo.webp',
 ];
 
 /** Safari просит озвучку кусками (Range) и без ответа 206 не играет её из памяти. */
