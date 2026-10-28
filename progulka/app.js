@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.25';
+const APP_VERSION = '1.26';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1822,7 +1822,9 @@ function showOfflineProgress() {
 /** Цветные значки маршрута на главном экране: путь, точки, время. */
 function planTags(plan) {
   const meters = plan.length > 1 ? planMeters(plan) : null;
-  const time = formatEstimate(Math.round((meters || 0) / KID_WALK_M_PER_MIN) + plan.length * MINUTES_PER_STOP).replace('около ', '');
+  // «около часа» → «1 час», иначе ярлычок «часа» читался бы странно.
+  const estimate = formatEstimate(Math.round((meters || 0) / KID_WALK_M_PER_MIN) + plan.length * MINUTES_PER_STOP);
+  const time = estimate === 'около часа' ? '1 час' : estimate.replace('около ', '');
   return `<div class="home-tags">
     ${meters != null ? `<span class="tag t-walk">👣 ${formatDistance(meters)}</span>` : ''}
     <span class="tag t-stops">📍 ${plan.length} ${pointsWord(plan.length)}</span>
