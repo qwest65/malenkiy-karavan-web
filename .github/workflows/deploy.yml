@@ -80,6 +80,13 @@ jobs:
         continue-on-error: true
         run: |
           H=https://xn----7sbbaalryjidglrj8b2n.xn--p1ai
+          # Поисковые роботы — первыми: если хостинг их не пускает, сайт не попадёт в поиск.
+          for ua in "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"; do
+            for u in $H/ $H/robots.txt $H/sitemap.xml; do
+              printf "%-12s %-14s " "${ua:25:9}" "${u#$H}"
+              curl -s -o /dev/null -A "$ua" -w "%{http_code} %{content_type} %{size_download}B %{time_total}s" "$u"; echo
+            done
+          done
           for ua in "Mozilla/5.0" "TelegramBot (like TwitterBot)" "WhatsApp/2.23" "facebookexternalhit/1.1"; do
             for u in $H/ $H/progulka/ $H/site/images/og.jpg $H/images/og.jpg; do
               printf "%-32s %-45s " "$ua" "${u#$H}"
