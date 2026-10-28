@@ -163,12 +163,16 @@ npm install --no-save playwright && npx playwright install chromium && node test
 ## Публикация
 
 **Адрес** — маленький-караван.рф (латиницей `xn----7sbbaalryjidglrj8b2n.xn--p1ai`). Второй домен
-malenkiy-karavan.ru и адреса с `www` открывают тот же сайт и сразу переводят на маленький-караван.рф
-(скрипт в начале `index.html`, `progulka/index.html`, `site/privacy.html`, `404.html`). Оба домена
+malenkiy-karavan.ru (с `www` и без) — отдельный сайт в ISPmanager с одним перенаправлением 301:
+путь `/` → `https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/` («Сайты» → malenkiy-karavan.ru → «Редиректы»).
+Он ведёт любой адрес на главную .рф: путь панель не сохраняет (`$request_uri` она портит, а второе
+правило `/progulka/` перекрывается правилом `/`). QR-коды, буклет и README ведут прямо на
+маленький-караван.рф/progulka/ и от этого не зависят. Запасной вариант — скрипт в начале `index.html`,
+`progulka/index.html`, `site/privacy.html`, `404.html`: с malenkiy-karavan.ru и `www` он переводит на
+тот же путь на .рф, если страница всё же открылась там. Оба домена
 куплены в REG.RU, DNS там же: записи A `@` и `www` → `185.154.20.52`.
 
-Сайт лежит на хостинге Cloud4box (ISPmanager, папка `www/malenkiy-karavan.ru`, у сайта псевдонимы
-для обоих доменов). Сертификат https бесплатный (Let's Encrypt), его выпускает и продлевает ISPmanager.
+Сайт лежит на хостинге Cloud4box (ISPmanager, папка `www/malenkiy-karavan.ru`). Сертификат https бесплатный (Let's Encrypt), его выпускает и продлевает ISPmanager.
 Выкладывает workflow **Deploy** (`.github/workflows/deploy.yml`): после каждого изменения в `main`
 скрипт `tools/deploy_ftp.py` заливает по FTPS только изменённые файлы — через 2–3 минуты они на сайте.
 Нужны секреты `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`. Настройки сервера (страница 404, типы
