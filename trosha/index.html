@@ -4,47 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Троша в телевизоре</title>
+<title>Троша — Маленький караван</title>
 <style>
   /* Страница показывается на интерактивной панели: управление пультом-кликером (∨ дальше, ∧ назад). */
   :root { --t: 1; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #2a1a10; cursor: none; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; cursor: none; user-select: none; -webkit-user-select: none; }
   body { font-family: "Rubik", "Segoe UI", Tahoma, Arial, sans-serif; }
   body.black::after { content: ""; position: fixed; inset: 0; background: #000; z-index: 50; }
 
-  /* комната: стена, пол и телевизор в 16:9 по центру */
-  .room { position: fixed; inset: 0; display: grid; place-items: center;
-    background: radial-gradient(ellipse at 50% 35%, #ffe9c2 0, #f7cf93 55%, #e9b26a 100%); }
-  .stage { position: relative; width: min(100vw, 177.78vh); height: min(56.25vw, 100vh); --u: calc(min(100vw, 177.78vh) / 100); }
-  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 9%; background: linear-gradient(#b9793c, #8e5424); }
-  .floor::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12%; background: rgba(0,0,0,.18); }
-
-  .antenna { position: absolute; left: 50%; top: 0; width: 0; height: 0; }
-  .antenna i { position: absolute; bottom: 0; width: calc(var(--u) * .45); height: calc(var(--u) * 11); background: #5a2d14; border-radius: 99px; transform-origin: bottom center; }
-  .antenna i:first-child { transform: rotate(-24deg); } .antenna i:last-child { transform: rotate(24deg); }
-  .antenna b { position: absolute; left: calc(var(--u) * -1.5); bottom: calc(var(--u) * -1); width: calc(var(--u) * 3); height: calc(var(--u) * 2); background: #5a2d14; border-radius: 50%; }
-
-  .tv { position: absolute; left: 3%; right: 3%; top: 8%; bottom: 7%; border-radius: calc(var(--u) * 3);
-    background: linear-gradient(160deg, #ffb25a, #ff8a2a 60%, #f0701a); border: calc(var(--u) * .5) solid #5a2d14;
-    box-shadow: 0 calc(var(--u) * 1.2) calc(var(--u) * 2.5) rgba(60,25,5,.45), inset 0 calc(var(--u) * .5) 0 rgba(255,255,255,.35); }
-  .tv::before, .tv::after { content: ""; position: absolute; bottom: calc(var(--u) * -3); width: calc(var(--u) * 8); height: calc(var(--u) * 3); background: #5a2d14; border-radius: 0 0 calc(var(--u) * 2) calc(var(--u) * 2); }
-  .tv::before { left: 10%; } .tv::after { right: 10%; }
-  .panel { position: absolute; right: 2.2%; top: 6%; bottom: 8%; width: 13%; display: flex; flex-direction: column; align-items: center; gap: 6%; padding-top: 4%; }
-  .knob { width: calc(var(--u) * 5.2); height: calc(var(--u) * 5.2); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff1d6, #c98a4a 70%, #7a4a20); border: calc(var(--u) * .35) solid #5a2d14; position: relative; }
-  .knob::after { content: ""; position: absolute; left: 47%; top: 8%; width: 6%; height: 36%; background: #5a2d14; border-radius: 9px; transform: rotate(35deg); transform-origin: 50% 120%; }
-  .grille { flex: 1; width: 78%; border-radius: calc(var(--u) * 1); background: repeating-linear-gradient(0deg, #5a2d14 0 calc(var(--u) * .45), transparent calc(var(--u) * .45) calc(var(--u) * 1.5)); opacity: .75; }
-  .led { width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); border-radius: 50%; background: #3a2a22; box-shadow: 0 0 0 calc(var(--u) * .25) #5a2d14; }
-  body.on .led { background: #ff4a3a; box-shadow: 0 0 calc(var(--u) * 1.4) #ff4a3a, 0 0 0 calc(var(--u) * .25) #5a2d14; }
-
-  .screen { position: absolute; left: 3.4%; top: 5.5%; bottom: 7%; right: 17.5%; border-radius: calc(var(--u) * 2.6); overflow: hidden; background: #0b0b0d;
-    border: calc(var(--u) * .7) solid #3a1d0b; box-shadow: inset 0 0 calc(var(--u) * 3) rgba(0,0,0,.9); }
-  .scene { position: absolute; inset: 0; transform-origin: 50% 50%; transform: scaleY(.004) scaleX(.6); opacity: 0; filter: brightness(4);
-    transition: transform calc(.55s * var(--t)) cubic-bezier(.5,0,.2,1), opacity calc(.2s * var(--t)), filter calc(.7s * var(--t)); }
-  body.on .scene { transform: none; opacity: 1; filter: none; }
-  .glass { position: absolute; inset: 0; pointer-events: none; z-index: 8;
-    background: radial-gradient(ellipse at 30% 15%, rgba(255,255,255,.22), transparent 45%), radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.28)); }
-  .offtext { position: absolute; left: 0; right: 0; bottom: 6%; text-align: center; color: #6e6a66; font-size: calc(var(--u) * 1.5); letter-spacing: .06em; z-index: 7; transition: opacity .3s; }
+  /* сцена на весь экран панели: сама панель и есть «телевизор» */
+  :root { --u: calc(min(100vw, 177.78vh) / 100); }
+  .screen { position: fixed; inset: 0; overflow: hidden; background: #000; }
+  .scene { position: absolute; inset: 0; opacity: 0; transition: opacity calc(.9s * var(--t)); }
+  body.on .scene { opacity: 1; }
+  .offtext { position: absolute; left: 0; right: 0; bottom: 6%; text-align: center; color: #5d5a57; font-size: calc(var(--u) * 1.4); letter-spacing: .06em; z-index: 7; transition: opacity .3s; }
   body.on .offtext { opacity: 0; }
 
   /* сцена: небо, облака, Троицк на горизонте, луг */
@@ -62,7 +36,7 @@
   .meadow { position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: linear-gradient(#8fd16a, #78c255 60%, #62aa40); border-radius: 55% 45% 0 0 / 22% 18% 0 0; }
 
   /* Троша: тело и слои поверх него в одной системе координат (1400 x 1045) */
-  .figure { position: absolute; left: 47%; bottom: -3%; height: 108%; aspect-ratio: 1400 / 1045.1; transform: translateX(-47%); z-index: 3; }
+  .figure { position: absolute; left: 47%; bottom: -2%; height: 102%; aspect-ratio: 1400 / 1045.1; transform: translateX(-47%); z-index: 3; }
   .figure.enter { animation: slide-in calc(.9s * var(--t)) cubic-bezier(.2,.9,.3,1) both; }
   @keyframes slide-in { from { transform: translateX(8%); opacity: 0; } to { transform: translateX(-47%); opacity: 1; } }
   .alive { position: absolute; inset: 0; transform-origin: 46% 95%; animation: breathe calc(3.6s * var(--t)) ease-in-out infinite; }
@@ -81,7 +55,7 @@
   .caption { position: absolute; left: 6%; right: 6%; bottom: 3%; z-index: 9; text-align: center; color: #fff; font-weight: 700; font-size: calc(var(--u) * 2); line-height: 1.25;
     text-shadow: 0 0 6px #000, 0 2px 4px #000; opacity: 0; transition: opacity .2s; }
   body.captions .caption.has { opacity: 1; }
-  .dots { position: absolute; left: 0; right: 0; bottom: 1.2%; display: none; justify-content: center; gap: 1.2%; z-index: 60; }
+  .dots { position: fixed; left: 0; right: 0; bottom: 1.2%; display: none; justify-content: center; gap: 1.2%; z-index: 60; }
   body.dots .dots { display: flex; }
   .dots i { width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); border-radius: 50%; background: rgba(255,255,255,.35); }
   .dots i.cur { background: #fff; }
@@ -91,11 +65,7 @@
 </style>
 </head>
 <body>
-<div class="room"><div class="stage" id="stage">
-  <div class="floor"></div>
-  <div class="antenna"><i></i><i></i><b></b></div>
-  <div class="tv">
-    <div class="screen" id="screen">
+<div class="screen" id="screen">
       <div class="scene">
         <div class="sky"></div><div class="sun"></div>
         <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
@@ -138,13 +108,9 @@
         <canvas class="fx" id="fx"></canvas>
         <div class="caption" id="caption"></div>
       </div>
-      <div class="glass"></div>
       <div class="offtext" id="offtext">нажмите ∨ на пульте</div>
-    </div>
-    <div class="panel"><div class="led"></div><div class="knob"></div><div class="knob" style="transform:rotate(60deg)"></div><div class="grille"></div></div>
-  </div>
-  <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-</div></div>
+</div>
+<div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 <div class="help"><div>
   <b>Управление пультом</b><br>
   <b>∨ (Page Down)</b> — дальше: Троша говорит следующую реплику<br>
@@ -159,7 +125,7 @@
 <script>
 'use strict';
 /* ---------- данные ---------- */
-const LAYOUT = {"W": 1400.0, "H": 1045.1, "face": {"x": 788.2, "y": 140.7}, "pieces": [{"cx": 527.9, "cy": 453.6}, {"cx": 685.5, "cy": 452.7}, {"cx": 532.7, "cy": 511.7}, {"cx": 650.4, "cy": 533.9}]};
+const LAYOUT = {"W": 1400.0, "H": 1045.1, "face": {"x": 788.2, "y": 140.7}, "pieces": [{"cx": 527.9, "cy": 453.6}, {"cx": 680.8, "cy": 452.0}, {"cx": 528.3, "cy": 505.5}, {"cx": 651.9, "cy": 538.1}]};
 const MOUTH = {"1": {"dur": 4.72, "fps": 40, "mouth": "000000111111111111001111000001111100110000000000000000000000000000000001110000110000000000000000111111111111100000001111000000000011111111111111111100011111001111111111111111000000000000000"}, "2": {"dur": 2.08, "fps": 40, "mouth": "000000000001100111110000110000011111111111100000111000000001111111111000000000000000"}, "3": {"dur": 27.04, "fps": 40, "mouth": "00000000000000000111111100000001100001111110001111100000000000000000000000000000111111000111100001111000111111110000000111111111000000000000000000000000000001111111100000011110000001111111110011100000111111111100000000000000000000000000000000000011111111111111100011100011111111000000000000000000000000011100000000001111111111000000001111110000111100000111111111110000000000000000000111110000111111111111111100111111111111000001111000000000000000001100011111111111111000000011111110000011111000011111100111111111110000000000000000000000000000001111111111110001111111111110001111100000001111111110000000000000000000001111111111000000001111111110000000000001100000011100001111000000000000000001110000001111111000001111111000000000111100000000011111111111111100001111000111111110001111111111111111100000000111000111111111000000011111111111111111111110000001111111000000000000000000000000000011111100000111111001111111111111110000111000000011000011100001111100001111111111111000111111111100000000000000000000000000000011111111110000111100000000000000110000111111110000001111100000000000"}, "4": {"dur": 8.4, "fps": 40, "mouth": "000000000001111100000000111111001111111100011111110000110000000000000111111111111110001111111111111100011110000011111111000000000000000000001110000011111110001111000000000111111111111111111111111110000000000000000000000000011111111111111111111111100011111111110000000000000000111111111111111111000111111100001111111100000000000000000000"}};
 const LINES = {
   1: { src: 'assets/line1.mp3', closed: 'worried', text: 'Анна Григорьевна, вы готовитесь к занятию, а у меня проблема!' },
@@ -209,10 +175,8 @@ const sfx = {
     s.connect(f); f.connect(g); g.connect(c.destination); s.start(t);
   },
   jingle() { for (let i = 0; i < 9; i++) setTimeout(() => sfx.ting(1800 + Math.random() * 1800, .12, .5), i * 70 / SPEED); },
-  tvOn() { const c = ctx(); if (!c) return; const t = c.currentTime, len = c.sampleRate * .25, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const s = c.createBufferSource(); s.buffer = buf; const g = c.createGain(); g.gain.value = .12; s.connect(g); g.connect(c.destination); s.start(t); this.ting(880, .12, .5); },
-  tvOff() { this.ting(440, .1, .4); }
+  tvOn() { this.ting(659.25, .12, .7); setTimeout(() => this.ting(987.77, .1, .8), 120 / SPEED); },
+  tvOff() { this.ting(783.99, .1, .6); setTimeout(() => this.ting(523.25, .09, .8), 120 / SPEED); }
 };
 
 /* ---------- частицы: искры и конфетти ---------- */
@@ -297,7 +261,7 @@ let screenOn = false;
 function tvOn(cb) {
   if (screenOn) { cb && cb(); return; }
   screenOn = true; sfx.tvOn(); body.classList.add('on'); figure.classList.remove('enter'); void figure.offsetWidth; figure.classList.add('enter');
-  later(() => cb && cb(), 900);
+  later(() => cb && cb(), 1000);
 }
 function tvOff() { if (!screenOn) return; screenOn = false; sfx.tvOff(); body.classList.remove('on'); }
 
