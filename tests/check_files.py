@@ -83,6 +83,20 @@ shown = [re.sub(r"^[^\wА-Яа-яЁё]+", "", re.sub(r"<[^>]+>", "", q)).strip()
 if not faq or [q["name"] for q in faq["mainEntity"]] != shown:
     errors.append("вопросы в разметке FAQPage на главной (index.html) не совпадают с разделом «Вопросы и ответы»")
 
+# Архив для флешки «Троша на экране» должен совпадать с папкой trosha/ (после правки: python3 tools/make_trosha_zip.py).
+import zipfile
+zpath = ROOT / "trosha/Trosha-na-ekrane.zip"
+if not zpath.is_file():
+    errors.append("нет архива trosha/Trosha-na-ekrane.zip (python3 tools/make_trosha_zip.py)")
+else:
+    with zipfile.ZipFile(zpath) as z:
+        inside = {i.filename.split("/", 1)[1]: z.read(i) for i in z.infolist()}
+    for f in (ROOT / "trosha").rglob("*"):
+        rel = f.relative_to(ROOT / "trosha").as_posix()
+        if f.is_file() and f != zpath and inside.get(rel) != f.read_bytes():
+            errors.append(f"архив trosha/Trosha-na-ekrane.zip устарел: {rel} (python3 tools/make_trosha_zip.py)")
+            break
+
 if errors:
     print("\n".join(errors))
     sys.exit(1)
