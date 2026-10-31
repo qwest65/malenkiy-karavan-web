@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /tests/
 Disallow: /tools/
+# Страница для занятия с интерактивной панелью — не для поиска.
+Disallow: /trosha/
 # Кусочки карты и служебный список файлов — не страницы, искать в них нечего.
 Disallow: /map/tiles/
 Disallow: /.deploy-manifest.json
@@ -11,6 +13,7 @@ User-agent: Yandex
 Allow: /
 Disallow: /tests/
 Disallow: /tools/
+Disallow: /trosha/
 Disallow: /map/tiles/
 Disallow: /.deploy-manifest.json
 Clean-param: v
