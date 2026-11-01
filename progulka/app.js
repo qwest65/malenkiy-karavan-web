@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.27';
+const APP_VERSION = '1.28';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -2253,12 +2253,14 @@ $app.addEventListener('touchend', e => {
 /* ================= Запуск ================= */
 
 /**
- * Анонимный счётчик: пользуются ли прогулкой. Просим у своего сайта крошечную картинку /s/<событие>.gif —
- * open (открыли), start (начали прогулку), finish (дошли до конца), install (поставили на экран «Домой»).
- * Ничего о человеке не передаётся; запрос виден в журнале хостинга (ISPmanager → отчёты). Без интернета молчит.
+ * Анонимный счётчик: пользуются ли прогулкой. Присылаем в свою функцию Яндекс Облака (counter/index.js) событие
+ * open (открыли), start (начали прогулку), finish (дошли до конца) или install (поставили на экран «Домой»).
+ * Ничего о человеке не передаётся. Пока адрес функции не задан, счётчик молчит; без интернета тоже.
  */
+const STAT_URL = 'https://functions.yandexcloud.net/d4ebu9ksrongtf4isj8p';
 function ping(name) {
-  try { fetch('/s/' + name + '.gif', { cache: 'no-store', mode: 'no-cors', keepalive: true }).catch(() => {}); } catch (_) { /* без счётчика */ }
+  if (!STAT_URL) return;
+  try { fetch(STAT_URL + '?e=' + name, { cache: 'no-store', mode: 'no-cors', keepalive: true }).catch(() => {}); } catch (_) { /* без счётчика */ }
 }
 window.addEventListener('appinstalled', () => ping('install'));
 

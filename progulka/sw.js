@@ -3,7 +3,7 @@
  * сохраняется в телефоне, вместе со своей картой Троицка (папка map/).
  * После любых правок увеличьте VERSION, чтобы телефоны забрали новую версию.
  */
-const VERSION = 'v34';
+const VERSION = 'v35';
 // Своя приставка: на том же адресе qwest65.github.io раньше жила старая копия (karavan-app-…).
 const APP_CACHE = `karavan-web-${VERSION}`;
 // Прежние кэши подложки с чужого сервера карт и шрифта с серверов Google — больше не нужны.
@@ -80,7 +80,6 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
 
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/s/')) return;       // счётчик запусков: всегда на сервер, не из памяти
   // Свои файлы: из памяти телефона; новая версия приходит вместе с новым VERSION.
   event.respondWith((async () => {
     const hit = await caches.match(req, { ignoreSearch: true });

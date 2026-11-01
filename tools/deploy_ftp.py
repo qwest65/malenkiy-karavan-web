@@ -27,7 +27,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ".deploy-manifest.json"
 # Что на хостинг не нужно: инструменты, проверки, служебное.
-SKIP_PREFIXES = (".git", "tools/", "tests/", "reviews/", "samples/")
+SKIP_PREFIXES = (".git", "tools/", "tests/", "reviews/", "counter/", "samples/")
 SKIP_FILES = {"README.md", "CNAME"}
 PAUSE = 0.3          # секунды между файлами — чтобы реже упираться в ограничение хостинга
 SAVE_EVERY = 40      # как часто сохранять список залитого

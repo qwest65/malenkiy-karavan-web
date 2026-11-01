@@ -4,8 +4,6 @@ Disallow: /tests/
 Disallow: /tools/
 # Страница для занятия с интерактивной панелью — не для поиска.
 Disallow: /trosha/
-# Крошечные файлы счётчика запусков.
-Disallow: /s/
 # Кусочки карты и служебный список файлов — не страницы, искать в них нечего.
 Disallow: /map/tiles/
 Disallow: /.deploy-manifest.json
@@ -16,7 +14,6 @@ Allow: /
 Disallow: /tests/
 Disallow: /tools/
 Disallow: /trosha/
-Disallow: /s/
 Disallow: /map/tiles/
 Disallow: /.deploy-manifest.json
 Clean-param: v
