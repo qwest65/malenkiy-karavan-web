@@ -83,6 +83,9 @@ shown = [re.sub(r"^[^\wА-Яа-яЁё]+", "", re.sub(r"<[^>]+>", "", q)).strip()
 if not faq or [q["name"] for q in faq["mainEntity"]] != shown:
     errors.append("вопросы в разметке FAQPage на главной (index.html) не совпадают с разделом «Вопросы и ответы»")
 
+for ev in ("open", "start", "finish", "install"):
+    need(f"s/{ev}.gif", "счётчик запусков (ping в progulka/app.js)")
+
 # Архив для флешки «Троша на экране» должен совпадать с папкой trosha/ (после правки: python3 tools/make_trosha_zip.py).
 import zipfile
 zpath = ROOT / "trosha/Trosha-na-ekrane.zip"

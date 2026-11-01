@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.26';
+const APP_VERSION = '1.27';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1116,6 +1116,7 @@ function startWalk(selection) {
   S.celebrated.clear();
   G.target = null;
   startTracking();
+  ping('start');
   go('walk');
   player.play('intro_trosha', 'phrase_road');
 }
@@ -1239,6 +1240,7 @@ function endWalk(complete) {
   player.stop();
   const j = S.journey;
   S.result = { complete, found: j.plan.filter(i => j.walkFound.includes(i)) };
+  if (complete) ping('finish');
   setJourney({ ...j, plan: [], position: 0, walkFound: [] });
   S.distance = null;
   G.ahead = null;
@@ -2250,6 +2252,16 @@ $app.addEventListener('touchend', e => {
 
 /* ================= Запуск ================= */
 
+/**
+ * Анонимный счётчик: пользуются ли прогулкой. Просим у своего сайта крошечную картинку /s/<событие>.gif —
+ * open (открыли), start (начали прогулку), finish (дошли до конца), install (поставили на экран «Домой»).
+ * Ничего о человеке не передаётся; запрос виден в журнале хостинга (ISPmanager → отчёты). Без интернета молчит.
+ */
+function ping(name) {
+  try { fetch('/s/' + name + '.gif', { cache: 'no-store', mode: 'no-cors', keepalive: true }).catch(() => {}); } catch (_) { /* без счётчика */ }
+}
+window.addEventListener('appinstalled', () => ping('install'));
+
 async function boot() {
   const [r, p, st] = await Promise.all([
     fetch('../data/route.json').then(x => x.json()),
@@ -2274,6 +2286,7 @@ async function boot() {
   Diploma.refresh().then(() => { if (S.screen === 'album' || S.screen === 'finale') render(); });
   history.replaceState({ inner: false }, '');
   render();
+  ping('open');
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     // Обновление приложения: новая версия приходит в фоне — на главном экране перезапускаемся сами.
     const hadController = !!navigator.serviceWorker.controller;
