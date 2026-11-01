@@ -2257,7 +2257,7 @@ $app.addEventListener('touchend', e => {
  * open (открыли), start (начали прогулку), finish (дошли до конца) или install (поставили на экран «Домой»).
  * Ничего о человеке не передаётся. Пока адрес функции не задан, счётчик молчит; без интернета тоже.
  */
-const STAT_URL = '';
+const STAT_URL = 'https://functions.yandexcloud.net/d4ebu9ksrongtf4isj8p';
 function ping(name) {
   if (!STAT_URL) return;
   try { fetch(STAT_URL + '?e=' + name, { cache: 'no-store', mode: 'no-cors', keepalive: true }).catch(() => {}); } catch (_) { /* без счётчика */ }
