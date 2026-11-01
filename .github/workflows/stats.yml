@@ -1,0 +1,45 @@
+name: Stats
+
+# Раз в сутки считает запуски прогулки (открыли, начали, дошли до конца, поставили на экран «Домой»)
+# по файлам в бакете Яндекс Облака, куда их кладёт функция counter/index.js, и записывает сводку:
+#   — на вкладку этого запуска (Summary);
+#   — в ветку stats: STATS.md (читается прямо на GitHub) и stats.json.
+# Бакет задан в counter/bucket.txt. Запуск вручную: Actions → Stats → Run workflow.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stats
+  cancel-in-progress: false
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Count launches
+        id: count
+        run: |
+          if python3 tools/count_stats.py "$RUNNER_TEMP/stats"; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            cat "$RUNNER_TEMP/stats/STATS.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::Счётчик ещё не настроен (counter/bucket.txt пуст) — см. counter/README.md"
+          fi
+
+      - name: Publish to the stats branch
+        if: steps.count.outputs.ready == 'true'
+        run: |
+          cd "$RUNNER_TEMP/stats"
+          git init -q -b stats
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add STATS.md stats.json
+          git commit -qm "Stats of $(date -u +%F)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" stats
