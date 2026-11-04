@@ -25,7 +25,7 @@
 |---|---|
 | Пользуются ли прогулкой (открыли, начали, дошли до конца) | [STATS.md в ветке `stats`](https://github.com/qwest65/malenkiy-karavan-web/blob/stats/STATS.md): обновляется раз в сутки; сразу — Actions → Stats → Run workflow. Как устроено — раздел «Сколько людей пользуется» ниже |
 | Пришёл ли новый отзыв | Закрытый репозиторий `qwest65/malenkiy-karavan-otzyvy` → Issues; как одобрить или снять — `reviews/README.md` |
-| Выложился ли сайт | Actions → Deploy: зелёная галочка — всё на сайте (через 2–3 минуты после слияния) |
+| Выложился ли сайт | Actions → Deploy: зелёная галочка — новая версия уже на сайте (обычно через 2–4 минуты после слияния; шаг «Дождаться новой версии на сайте» сверяет файлы с сайтом) |
 | Скачивания и статус приложения для Android | [RuStore Консоль](https://console.rustore.ru) (приложение `ru.malenkiykaravan`); APK — [релизы](https://github.com/qwest65/malenkiy-karavan/releases) Android-репозитория |
 | Как выглядят экраны приложения | Ветка `screens` Android-репозитория (снимки из эмулятора) |
 
@@ -43,10 +43,12 @@
 
 | Где | Что там |
 |---|---|
-| Хостинг Cloud4box (ISPmanager) | сайт `malenkiy-karavan.ru` (папка сайта), сертификат, перенаправление .ru → .рф («Редиректы»), FTP-пользователь для выкладки |
-| REG.RU | домены маленький-караван.рф и malenkiy-karavan.ru, DNS |
+| Свой сервер | сайт маленький-караван.рф с 4 ноября 2026: сервер сам забирает ветку `main` раз в 2 минуты, сертификат Let's Encrypt |
+| Хостинг Cloud4box (ISPmanager) | до конца оплаты: перенаправление malenkiy-karavan.ru → .рф («Редиректы») и прежняя копия сайта (FTP-выкладка) |
+| REG.RU | домены маленький-караван.рф и malenkiy-karavan.ru (регистрация, продление); DNS malenkiy-karavan.ru |
+| FreeDNS (freedns.afraid.org) | DNS маленький-караван.рф (с 4 ноября 2026) |
 | Яндекс Облако (облако `cloud-qwest65`, каталог `default`) | функция **`otziv`** — приём отзывов; функция **`stat`** — счётчик запусков (id `d4ebu9ksrongtf4isj8p`, сервисный аккаунт `karavan-stat`, бакет Object Storage `karavan-stat-2026`, переменные `BUCKET` и `DEBUG`); как создавалось — `counter/README.md` |
-| GitHub → Settings → Secrets → Actions | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (выкладка), `YANDEX_SPEECHKIT_KEY` (озвучка рассказчика); в Android-репозитории — ключ подписи и `RUSTORE_*` |
+| GitHub → Settings → Secrets → Actions | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (выкладка на прежний хостинг — удалить, когда хостинг не нужен), `YANDEX_SPEECHKIT_KEY` (озвучка рассказчика); в Android-репозитории — ключ подписи и `RUSTORE_*` |
 | ElevenLabs | голос Троши «Троша — Маленький караван» (озвучка прогулки и страницы `trosha/`) |
 
 **Что ещё не сделано (на 1 ноября 2026)**
@@ -127,11 +129,11 @@
 | `tools/build_streets.py` | Строит пешеходные линии и улицы из OpenStreetMap (workflow «Walking paths») |
 | `tools/generate_audio.py` | Озвучка рассказчика Яндекс SpeechKit (workflow «Voice») |
 | `tools/update_files.py` | Список наклеек и озвучки для работы без интернета (`data/files.json`) |
-| `tools/deploy_ftp.py` | Выкладка на хостинг: заливает по FTPS только изменённые файлы (workflow «Deploy») |
+| `tools/deploy_ftp.py` | Выкладка на прежний хостинг по FTPS (workflow «Deploy», только пока есть секреты `FTP_*`) |
 | `trosha/` | **«Троша на экране панели»** — страница для занятия на интерактивной панели: `index.html`, `assets/` (картинки, озвучка) и готовый архив для флешки `Trosha-na-ekrane.zip` (`tools/make_trosha_zip.py`) |
 | `counter/` | Счётчик запусков: функция Яндекс Облака (`index.js`), имя бакета (`bucket.txt`), инструкция по настройке (`README.md`) |
 | `tests/` | Проверка перед выкладкой (workflow «Checks») |
-| `.htaccess`, `robots.txt`, `sitemap.xml`, `404.html` | Настройки хостинга, подсказки поисковикам, страница «нет такой страницы» |
+| `.htaccess`, `robots.txt`, `sitemap.xml`, `404.html` | Настройки прежнего хостинга (на своём сервере те же правила — в его настройках nginx), подсказки поисковикам, страница «нет такой страницы» |
 | `CNAME` | Адрес для запасной копии на GitHub Pages |
 
 ## Главный дом проекта
@@ -229,13 +231,19 @@ malenkiy-karavan.ru (с `www` и без) — отдельный сайт в ISPm
 маленький-караван.рф/progulka/ и от этого не зависят. Запасной вариант — скрипт в начале `index.html`,
 `progulka/index.html`, `site/privacy.html`, `404.html`: с malenkiy-karavan.ru и `www` он переводит на
 тот же путь на .рф, если страница всё же открылась там. Оба домена
-куплены в REG.RU, DNS там же: записи A `@` и `www` → `185.154.20.52`.
+куплены в REG.RU. DNS malenkiy-karavan.ru — в REG.RU (A `@` и `www` → хостинг); DNS маленький-караван.рф — во FreeDNS
+(с 4 ноября 2026, адрес сервера там обновляется автоматически).
 
-Сайт лежит на хостинге Cloud4box (ISPmanager, папка `www/malenkiy-karavan.ru`). Сертификат https бесплатный (Let's Encrypt), его выпускает и продлевает ISPmanager.
-Выкладывает workflow **Deploy** (`.github/workflows/deploy.yml`): после каждого изменения в `main`
-скрипт `tools/deploy_ftp.py` заливает по FTPS только изменённые файлы — через 2–3 минуты они на сайте.
-Нужны секреты `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`. Настройки сервера (страница 404, типы
-файлов) — в `.htaccess`.
+С 4 ноября 2026 сайт работает на своём сервере: сервер сам забирает ветку `main` раз в 2 минуты
+(сборки нет — что в `main`, то и на сайте; служебные `tools/`, `tests/`, `reviews/`, `counter/` наружу не отдаются).
+Сертификат https — Let's Encrypt, продлевается сам. Страница 404, типы файлов карты и свежесть `sw.js` настроены
+на сервере так же, как раньше в `.htaccess`.
+Workflow **Deploy** (`.github/workflows/deploy.yml`) после каждого изменения в `main` проверяет файлы, ждёт,
+пока сайт отдаст новую версию, сообщает поисковикам (IndexNow) и проверяет сайт глазами роботов.
+
+Прежний хостинг Cloud4box (ISPmanager, папка `www/malenkiy-karavan.ru`) — до конца оплаты: держит перенаправление
+malenkiy-karavan.ru и копию сайта, которую Deploy заливает по FTPS (`tools/deploy_ftp.py`), пока заданы секреты
+`FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`. Когда хостинг не нужен — удалить секреты, остальное продолжит работать.
 
 Почему не GitHub Pages: для доменов .ru и .рф GitHub не выпускает сертификат (его проверка DNS для
 российских зон не проходит), а прокси Cloudflare в России тормозит. GitHub Pages из ветки `main`
@@ -282,10 +290,9 @@ MAX перечитывает карточку сам. Если всё же ви�
   в разделе «Вопросы и ответы». Поменяли точки или вопросы — обновите и разметку: `tests/check_files.py`
   напомнит.
 - Скорость: свой шрифт (`fonts/`), картинки ниже первого экрана грузятся по мере прокрутки.
-- IndexNow: после каждой выкладки workflow Deploy сообщает Яндексу и Bing, что страницы обновились
+- IndexNow: после каждого обновления сайта workflow Deploy сообщает Яндексу и Bing, что страницы обновились
   (ключ — файл `2d3d361ce742b2b5b9e2cbaeeaced98e.txt` в корне, удалять нельзя).
-- `404.html` — своя страница «Ой, такой страницы нет» (на хостинге пока отдаётся стандартная — её можно
-  подключить в ISPmanager: сайт → Изменить → страницы ошибок, если такая настройка есть).
+- `404.html` — своя страница «Ой, такой страницы нет» (на своём сервере подключена).
 - Яндекс Вебмастер и Google Search Console: код подтверждения прав вставляется в `<head>` главной
   (`<meta name="yandex-verification" …>` уже есть; `<meta name="google-site-verification" …>` — когда будет код).
   Проверка после выкладки открывает `/`, `robots.txt` и `sitemap.xml` как робот Яндекса и Google.
