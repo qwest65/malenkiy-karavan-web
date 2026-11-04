@@ -1,13 +1,12 @@
 name: Deploy
 
-# Выкладка сайта на хостинг (Cloud4box, ISPmanager) по FTPS (tools/deploy_ftp.py): там у сайта свой сертификат
-# Let's Encrypt, и он открывается из России без VPN. GitHub Pages остаётся запасной копией.
-#
-# Нужны секреты репозитория (Settings → Secrets and variables → Actions):
-#   FTP_SERVER   — адрес FTP-сервера из письма или панели хостинга;
-#   FTP_USERNAME — FTP-пользователь, у которого домашняя папка — папка сайта;
-#   FTP_PASSWORD — его пароль.
-# Пока секретов нет, workflow ничего не делает.
+# Сайт живёт на своём сервере: сервер сам забирает ветку main раз в 2 минуты (с 4 ноября 2026).
+# Этот workflow после каждого изменения в main:
+#   1) проверяет файлы и данные;
+#   2) ждёт, пока новая версия появится на сайте (сверяет несколько файлов с сайтом);
+#   3) сообщает Яндексу и Bing, что страницы обновились (IndexNow), и проверяет сайт глазами роботов.
+# Выкладка по FTPS на прежний хостинг (Cloud4box, tools/deploy_ftp.py) — только пока заданы секреты
+# FTP_SERVER, FTP_USERNAME, FTP_PASSWORD; когда хостинг не нужен — удалить их, остальное продолжит работать.
 #
 # Запускается после каждого push в main и после workflow, которые сами коммитят в main
 # (их push от github-actions[bot] не запускает другие workflow).
@@ -30,57 +29,60 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
+    env:
+      SITE: https://xn----7sbbaalryjidglrj8b2n.xn--p1ai
+      HAS_FTP: ${{ secrets.FTP_SERVER != '' }}
     steps:
-      - name: Секреты на месте?
-        id: secrets
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-        run: |
-          if [ -z "$FTP_SERVER" ]; then
-            echo "Нет секрета FTP_SERVER — выкладка на хостинг пропущена."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: actions/checkout@v4
-        if: steps.secrets.outputs.ready == 'true'
         with:
           ref: main
 
       - name: Файлы и данные на месте
-        if: steps.secrets.outputs.ready == 'true'
         run: python3 tests/check_files.py
 
-      - name: Залить на хостинг
-        if: steps.secrets.outputs.ready == 'true'
+      - name: Залить на прежний хостинг (пока есть секреты FTP)
+        if: env.HAS_FTP == 'true'
+        continue-on-error: true
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: python3 tools/deploy_ftp.py
 
+      # Сервер забирает main раз в 2 минуты. Ждём, пока сайт отдаст ровно эти файлы (до 10 минут).
+      - name: Дождаться новой версии на сайте
+        continue-on-error: true
+        run: |
+          for i in $(seq 1 30); do
+            ok=1
+            for f in index.html progulka/index.html progulka/sw.js data/files.json; do
+              if [ "$(curl -s --max-time 20 "$SITE/$f" | sha256sum)" != "$(sha256sum < "$f")" ]; then ok=0; break; fi
+            done
+            if [ "$ok" = 1 ]; then echo "Новая версия на сайте (попытка $i)."; exit 0; fi
+            sleep 20
+          done
+          echo "::warning::За 10 минут сайт не показал новую версию ($f отличается) — проверьте сервер."
+          exit 1
+
       # IndexNow: сообщаем Яндексу (и Bing), что страницы обновились, — так они быстрее попадают в поиск.
       # Ключ — имя и содержимое файла 2d3d361ce742b2b5b9e2cbaeeaced98e.txt в корне сайта.
       - name: Сообщить поисковикам
-        if: steps.secrets.outputs.ready == 'true'
         continue-on-error: true
         run: |
-          H=xn----7sbbaalryjidglrj8b2n.xn--p1ai
+          H=${SITE#https://}
           KEY=2d3d361ce742b2b5b9e2cbaeeaced98e
           BODY="{\"host\":\"$H\",\"key\":\"$KEY\",\"keyLocation\":\"https://$H/$KEY.txt\",\"urlList\":[\"https://$H/\",\"https://$H/progulka/\",\"https://$H/site/privacy.html\"]}"
           for api in https://yandex.com/indexnow https://api.indexnow.org/indexnow; do
             echo "$api: $(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json; charset=utf-8' -d "$BODY" "$api")"
           done
 
-      # Сайт открывается после выкладки — и так, как его видят роботы мессенджеров (карточки ссылок).
+      # Сайт открывается — и так, как его видят роботы поисковиков и мессенджеров (карточки ссылок).
       - name: Проверить сайт
-        if: steps.secrets.outputs.ready == 'true'
         continue-on-error: true
         run: |
-          H=https://xn----7sbbaalryjidglrj8b2n.xn--p1ai
-          # Поисковые роботы — первыми: если хостинг их не пускает, сайт не попадёт в поиск.
+          H=$SITE
+          # Поисковые роботы — первыми: если сервер их не пускает, сайт не попадёт в поиск.
           for ua in "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"; do
             for u in $H/ $H/robots.txt $H/sitemap.xml; do
               printf "%-12s %-14s " "${ua:25:9}" "${u#$H}"
@@ -95,4 +97,3 @@ jobs:
           done
           curl -s -A "TelegramBot (like TwitterBot)" $H/ | grep -o '<meta property="og:[a-z:]*" content="[^"]*"' | head -5
           curl -sI -A "TelegramBot (like TwitterBot)" $H/ | head -20
-
