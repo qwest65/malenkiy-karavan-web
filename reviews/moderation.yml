@@ -6,8 +6,8 @@
 #   Close as not planned           → не публикуется;
 #   Reopen                         → снимается с сайта;
 #   правка текста закрытой задачи   → на сайте обновляется текст.
-# Новый отзыв получает комментарий от github-actions: GitHub не присылает уведомления
-# о собственных задачах (их создаёт функция с вашим токеном), а о комментарии — присылает.
+# Новый отзыв получает комментарий от github-actions с упоминанием @qwest65: GitHub не присылает
+# уведомления о собственных задачах (их создаёт функция с вашим токеном), а об упоминании — присылает всегда.
 # Секрет SITE_TOKEN — токен GitHub с правом Contents: Read and write на репозиторий сайта.
 name: Moderation
 
@@ -31,8 +31,10 @@ jobs:
       - name: Comment (sends a push to the phone)
         env:
           GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ github.event.issue.title }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Новый отзыв с сайта.
+          # Обращение @qwest65 — упоминание GitHub присылает всегда (обычный комментарий — только по настройкам).
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "@qwest65 Новый отзыв с сайта: ${TITLE#Отзыв: }.
 
           - Опубликовать: **Close issue** (закрыть как выполненную).
           - Не публиковать: стрелка рядом с Close → **Close as not planned**.
