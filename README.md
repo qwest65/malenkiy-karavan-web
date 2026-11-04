@@ -44,7 +44,8 @@
 | Где | Что там |
 |---|---|
 | Свой сервер | сайт маленький-караван.рф с 4 ноября 2026: сервер сам забирает ветку `main` раз в 2 минуты, сертификат Let's Encrypt |
-| Хостинг Cloud4box (ISPmanager) | до конца оплаты: перенаправление malenkiy-karavan.ru → .рф («Редиректы») и прежняя копия сайта (FTP-выкладка) |
+| Nginx Proxy Manager (на своём сервере; вход из локальной сети: http://192.168.0.91:81) | с 4 ноября 2026 перенаправление malenkiy-karavan.ru и www.malenkiy-karavan.ru → маленький-караван.рф: Хосты → Редирект-хосты, код 301, HTTPS, сертификат Let's Encrypt (продлевается сам; для этого сервер должен быть включён и доступен из интернета по портам 80 и 443) |
+| Хостинг Cloud4box (ISPmanager) | до конца оплаты: прежняя копия сайта (FTP-выкладка); перенаправление с malenkiy-karavan.ru оттуда перенесено на свой сервер |
 | REG.RU | домены маленький-караван.рф и malenkiy-karavan.ru (регистрация, продление); DNS malenkiy-karavan.ru |
 | FreeDNS (freedns.afraid.org) | DNS маленький-караван.рф (с 4 ноября 2026) |
 | Яндекс Облако (облако `cloud-qwest65`, каталог `default`) | функция **`otziv`** — приём отзывов; функция **`stat`** — счётчик запусков (id `d4ebu9ksrongtf4isj8p`, сервисный аккаунт `karavan-stat`, бакет Object Storage `karavan-stat-2026`, переменные `BUCKET` и `DEBUG`); как создавалось — `counter/README.md` |
@@ -224,14 +225,13 @@ npm install --no-save playwright && npx playwright install chromium && node test
 ## Публикация
 
 **Адрес** — маленький-караван.рф (латиницей `xn----7sbbaalryjidglrj8b2n.xn--p1ai`). Второй домен
-malenkiy-karavan.ru (с `www` и без) — отдельный сайт в ISPmanager с одним перенаправлением 301:
-путь `/` → `https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/` («Сайты» → malenkiy-karavan.ru → «Редиректы»).
-Он ведёт любой адрес на главную .рф: путь панель не сохраняет (`$request_uri` она портит, а второе
-правило `/progulka/` перекрывается правилом `/`). QR-коды, буклет и README ведут прямо на
+malenkiy-karavan.ru (с `www` и без) с 4 ноября 2026 перенаправляет на маленький-караван.рф кодом 301 через
+Nginx Proxy Manager на своём сервере (Хосты → Редирект-хосты; раньше то же делал ISPmanager на Cloud4box, где
+панель не умела сохранять путь). QR-коды, буклет и README ведут прямо на
 маленький-караван.рф/progulka/ и от этого не зависят. Запасной вариант — скрипт в начале `index.html`,
 `progulka/index.html`, `site/privacy.html`, `404.html`: с malenkiy-karavan.ru и `www` он переводит на
 тот же путь на .рф, если страница всё же открылась там. Оба домена
-куплены в REG.RU. DNS malenkiy-karavan.ru — в REG.RU (A `@` и `www` → хостинг); DNS маленький-караван.рф — во FreeDNS
+куплены в REG.RU. DNS malenkiy-karavan.ru — в REG.RU (A `@` и `www` → свой сервер); DNS маленький-караван.рф — во FreeDNS
 (с 4 ноября 2026, адрес сервера там обновляется автоматически).
 
 С 4 ноября 2026 сайт работает на своём сервере: сервер сам забирает ветку `main` раз в 2 минуты
@@ -241,8 +241,7 @@ malenkiy-karavan.ru (с `www` и без) — отдельный сайт в ISPm
 Workflow **Deploy** (`.github/workflows/deploy.yml`) после каждого изменения в `main` проверяет файлы, ждёт,
 пока сайт отдаст новую версию, сообщает поисковикам (IndexNow) и проверяет сайт глазами роботов.
 
-Прежний хостинг Cloud4box (ISPmanager, папка `www/malenkiy-karavan.ru`) — до конца оплаты: держит перенаправление
-malenkiy-karavan.ru и копию сайта, которую Deploy заливает по FTPS (`tools/deploy_ftp.py`), пока заданы секреты
+Прежний хостинг Cloud4box (ISPmanager, папка `www/malenkiy-karavan.ru`) — до конца оплаты: держит копию сайта, которую Deploy заливает по FTPS (`tools/deploy_ftp.py`), пока заданы секреты
 `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`. Когда хостинг не нужен — удалить секреты, остальное продолжит работать.
 
 Почему не GitHub Pages: для доменов .ru и .рф GitHub не выпускает сертификат (его проверка DNS для
