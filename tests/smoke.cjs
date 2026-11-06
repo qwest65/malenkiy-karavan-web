@@ -123,6 +123,26 @@ const check = (ok, what) => { console.log(`${ok ? '✓' : '✗'} ${what}`); if (
       `точки маршрута на сайте взяты из данных (${routeInfo.got} из ${routeInfo.want})`);
     check(await site.isVisible('#reviews h2'), 'на сайте есть раздел «Отзывы»');
     check(siteErrors.length === 0, `сайт без ошибок${siteErrors.length ? ': ' + siteErrors.join('; ') : ''}`);
+
+    // Главный экран прогулки помещается на телефон без прокрутки — и в «чистом» виде, и с подсказкой про значок «Домой»
+    // (iPhone, со 2-го открытия), найденными вещами и прогулкой на паузе.
+    const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+    const states = {
+      'чистый': null,
+      'с найденными вещами': { plan: [], position: 0, found: [0, 1, 2], walkFound: [], badge: false },
+      'прогулка на паузе': { plan: [0, 1, 2, 3], position: 2, found: [0, 1], walkFound: [0, 1], badge: false },
+    };
+    for (const [w, h] of [[390, 664], [375, 667], [360, 640], [412, 780], [320, 568]]) {
+      for (const [label, journey] of Object.entries(states)) {
+        const ctx = await browser.newContext({ viewport: { width: w, height: h }, userAgent: IPHONE, hasTouch: true });
+        const pg = await ctx.newPage();
+        await pg.addInitScript(j => { localStorage.setItem('karavan.opens', '5'); if (j) localStorage.setItem('karavan.journey2', JSON.stringify({ route: 'trosha-lost', ...j })); }, journey);
+        await pg.goto(WALK); await pg.waitForSelector('.home-page'); await pg.waitForTimeout(500);
+        const over = await pg.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+        check(over <= 1, `главный экран ${w}×${h}, ${label}: без прокрутки${over > 1 ? ` (не хватает ${over} px)` : ''}`);
+        await ctx.close();
+      }
+    }
   } finally {
     await browser.close();
     server.kill();
