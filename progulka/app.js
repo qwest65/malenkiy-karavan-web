@@ -6,7 +6,7 @@
 'use strict';
 
 /** Номер веб-версии: виден внизу главного экрана, чтобы понять, обновилось ли приложение. */
-const APP_VERSION = '1.28';
+const APP_VERSION = '1.29';
 const STORE_KEY = 'karavan.journey2';
 const HINT_KEY = 'karavan.installHint';
 const OPENS_KEY = 'karavan.opens';
@@ -1853,19 +1853,16 @@ function homeScreen() {
       <div class="home-items-note">${j.found.length ? `Найдено ${j.found.length} из ${total} вещей` : `Найди все ${total} вещей Троши!`}</div>
     </div>
     ${J.inProgress ? `
-      <div class="panel gold">
-        <div class="bold" style="font-size:20px">⏸ Прогулка на паузе</div>
-        <div style="font-size:16px">Пройдено точек: ${j.position} из ${j.plan.length}</div>
-      </div>
-      <button class="btn" data-act="resume">Продолжить прогулку</button>
-      <button class="btn soft" data-act="finish">Завершить прогулку</button>`
+      <div class="pause-line">⏸ Прогулка на паузе · пройдено ${j.position} из ${j.plan.length}</div>
+      <button class="btn go" data-act="resume">Продолжить прогулку</button>`
     : `<button class="btn go" data-act="choose">🐫 Начать прогулку</button>`}
     <button class="btn soft" data-act="album">📒 Мой альбом</button>
     ${mustOpenInBrowser() ? '' : installHint()}
-    ${j.found.length || j.badge ? `<button class="link" data-act="reset">Очистить альбом</button>` : ''}
     <div id="offline-progress">${offlineProgress()}</div>
     <div class="home-foot"><a class="link muted" href="../">О проекте</a> ·
-      <button class="link muted" data-act="about">Веб-версия ${APP_VERSION}</button></div>
+      <button class="link muted" data-act="about">Веб-версия ${APP_VERSION}</button>
+      ${J.inProgress ? `· <button class="link muted" data-act="finish">Завершить прогулку</button>` : ''}
+      ${j.found.length || j.badge ? `· <button class="link muted" data-act="reset">Очистить альбом</button>` : ''}</div>
   </div>`;
 }
 
