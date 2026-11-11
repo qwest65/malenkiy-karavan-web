@@ -1,0 +1,31 @@
+name: Release
+
+# После каждого слияния PR в main создаёт релиз на GitHub (Releases) с меткой версии: v1.30, v1.30.1 …
+# К метке можно откатить сайт или, наоборот, обновить. Как — в README, раздел «Версии и откат».
+# При первом запуске также ставит метки на прошлые версии 1.24…1.29.
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # только слияния PR (не автоматические коммиты вроде «Отзыв #…», карты, озвучки, статистики)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Merge pull request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Релиз
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash tools/make_release.sh
