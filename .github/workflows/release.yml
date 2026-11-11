@@ -30,10 +30,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set +e
-          echo '--- создаём тестовый релиз'
-          gh api -i -X POST repos/$GITHUB_REPOSITORY/releases -f tag_name=diag-test -f target_commitish=$GITHUB_SHA -f name=diag -F draft=true 2>&1 | head -30
-          echo '--- права токена'
-          gh api -i repos/$GITHUB_REPOSITORY 2>&1 | grep -i 'x-accepted\|x-oauth\|permission' | head
-          echo '--- метка через git'
-          git tag diag-tag && git push origin diag-tag 2>&1 | tail -3; git push origin :refs/tags/diag-tag 2>&1 | tail -1
+          gh release delete diag-test -y --cleanup-tag 2>&1 | tail -2
+          gh api -X DELETE repos/$GITHUB_REPOSITORY/releases/441972974 2>&1 | tail -2
+          echo '--- A: релиз на старый коммит 3520fae (публикация)'
+          gh release create diag-old --target 3520fae9f0d9ee199acaa45f133d2bfe42825e7e --title diagold --notes x 2>&1 | tail -3
+          echo '--- B: релиз на текущий коммит'
+          gh release create diag-new --target $GITHUB_SHA --title diagnew --notes x 2>&1 | tail -3
+          echo '--- C: метка на старый коммит через git'
+          git tag diag-c 3520fae9f0d9ee199acaa45f133d2bfe42825e7e && git push origin diag-c 2>&1 | tail -2
+          echo '--- очистка'
+          for t in diag-old diag-new; do gh release delete $t -y --cleanup-tag 2>&1 | tail -1; done
+          git push origin :refs/tags/diag-c 2>&1 | tail -1
+          gh release list 2>&1 | head
           exit 0
