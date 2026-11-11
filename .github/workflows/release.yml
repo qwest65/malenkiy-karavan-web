@@ -28,4 +28,12 @@ jobs:
       - name: Релиз
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash tools/make_release.sh
+        run: |
+          set +e
+          echo '--- создаём тестовый релиз'
+          gh api -i -X POST repos/$GITHUB_REPOSITORY/releases -f tag_name=diag-test -f target_commitish=$GITHUB_SHA -f name=diag -F draft=true 2>&1 | head -30
+          echo '--- права токена'
+          gh api -i repos/$GITHUB_REPOSITORY 2>&1 | grep -i 'x-accepted\|x-oauth\|permission' | head
+          echo '--- метка через git'
+          git tag diag-tag && git push origin diag-tag 2>&1 | tail -3; git push origin :refs/tags/diag-tag 2>&1 | tail -1
+          exit 0
