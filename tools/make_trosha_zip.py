@@ -75,7 +75,8 @@ def main():
         old.unlink()
     (ROOT / name).write_bytes(data)
     md = README_MD.read_text(encoding="utf-8")
-    md = re.sub(rf"{PREFIX}(-[0-9a-f]{{8}})?\.zip", name, md)
+    # меняем только ссылки на файл на сайте (…/trosha/Trosha-na-ekrane-<метка>.zip); постоянную ссылку на релиз не трогаем
+    md = re.sub(rf"trosha/{PREFIX}(-[0-9a-f]{{8}})?\.zip", f"trosha/{name}", md)
     README_MD.write_text(md, encoding="utf-8")
     print(f"{name}: {len(files)} файлов, {len(data) / 1e6:.1f} МБ; ссылка в README обновлена")
 
