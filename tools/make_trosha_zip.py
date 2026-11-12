@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""Собирает архив «Троша на экране» для флешки: trosha/Trosha-na-ekrane.zip.
+"""Собирает архив «Троша на экране» для флешки: trosha/Trosha-na-ekrane-<метка>.zip.
 
 Внутри папка «Троша-на-экране»: index.html, assets/ и файл КАК-ЗАПУСТИТЬ.txt. Архив лежит рядом со
-страницей, поэтому скачивается с сайта: маленький-караван.рф/trosha/Trosha-na-ekrane.zip.
+страницей, поэтому скачивается с сайта: маленький-караван.рф/trosha/ (точная ссылка в README).
+В имени архива стоит короткая метка содержимого: при любой правке имя новое, поэтому браузер и прокси не отдают
+старую копию из кэша (так было с «Trosha-na-ekrane.zip»). Скрипт сам прописывает новую ссылку в README.
 Поменяли что-то в trosha/ — запустите заново и закоммитьте архив:
 
     python3 tools/make_trosha_zip.py
 """
+import hashlib
+import io
+import json
 import pathlib
+import re
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1] / "trosha"
-OUT = ROOT / "Trosha-na-ekrane.zip"
+PREFIX = "Trosha-na-ekrane"
+README_MD = ROOT.parent / "README.md"
 FOLDER = "Троша-на-экране"
 DATE = (2026, 1, 1, 0, 0, 0)    # одна и та же дата — архив не меняется, пока не изменились файлы
 
@@ -52,13 +59,33 @@ def add(z, name, data):
     z.writestr(info, data)
 
 
-def main():
-    files = sorted(p for p in ROOT.rglob("*") if p.is_file() and p != OUT)
-    with zipfile.ZipFile(OUT, "w") as z:
+def is_dl(p):
+    """Страница скачивания trosha/zip/ в архив не входит (в ней лежит имя самого архива)."""
+    return p.relative_to(ROOT).parts[0] == "zip"
+
+
+def build(files):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
         add(z, "КАК-ЗАПУСТИТЬ.txt", README.encode("utf-8"))
         for p in files:
             add(z, p.relative_to(ROOT).as_posix(), p.read_bytes())
-    print(f"{OUT.name}: {len(files)} файлов, {OUT.stat().st_size / 1e6:.1f} МБ")
+    return buf.getvalue()
+
+
+def main():
+    files = sorted(p for p in ROOT.rglob("*") if p.is_file() and not p.name.startswith(PREFIX) and not is_dl(p))
+    data = build(files)
+    name = f"{PREFIX}-{hashlib.sha256(data).hexdigest()[:8]}.zip"
+    for old in ROOT.glob(f"{PREFIX}*.zip"):
+        old.unlink()
+    (ROOT / name).write_bytes(data)
+    (ROOT / "zip" / "latest.json").write_text(json.dumps({"file": name}, ensure_ascii=False) + "\n", encoding="utf-8")
+    md = README_MD.read_text(encoding="utf-8")
+    # меняем только ссылки на файл на сайте (…/trosha/Trosha-na-ekrane-<метка>.zip); постоянную ссылку на релиз не трогаем
+    md = re.sub(rf"trosha/{PREFIX}(-[0-9a-f]{{8}})?\.zip", f"trosha/{name}", md)
+    README_MD.write_text(md, encoding="utf-8")
+    print(f"{name}: {len(files)} файлов, {len(data) / 1e6:.1f} МБ; ссылка в README обновлена")
 
 
 if __name__ == "__main__":

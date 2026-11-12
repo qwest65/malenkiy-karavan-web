@@ -17,6 +17,12 @@ if git tag --points-at "$SHA" | grep -q '^v'; then echo "У этого комм�
 PR="$(git log -1 --format=%b "$SHA" | grep -m1 . || git log -1 --format=%s "$SHA")"
 tag="v$APP"; k=0
 while has "$tag" || git rev-parse -q --verify "refs/tags/$tag" >/dev/null; do k=$((k + 1)); tag="v$APP.$k"; done
-gh release create "$tag" --target "$SHA" --latest --generate-notes --title "${tag#v} · $PR" \
-  --notes "$PR"$'\n\n'"Откатить сайт на эту версию: README, раздел «Версии и откат»."
+# архив Троши для флешки прикладывается к релизу под одним и тем же именем: так постоянная ссылка
+# https://github.com/<репозиторий>/releases/latest/download/Trosha-na-ekrane.zip всегда ведёт на свежий архив
+ASSETS=()
+if ls trosha/Trosha-na-ekrane-*.zip >/dev/null 2>&1; then
+  tmp="$(mktemp -d)"; cp trosha/Trosha-na-ekrane-*.zip "$tmp/Trosha-na-ekrane.zip"; ASSETS=("$tmp/Trosha-na-ekrane.zip")
+fi
+gh release create "$tag" "${ASSETS[@]}" --target "$SHA" --latest --generate-notes --title "${tag#v} · $PR" \
+  --notes "$PR"$'\n\n'"Архив Троши для флешки: Trosha-na-ekrane.zip (в файлах ниже). Откатить сайт на эту версию: README, раздел «Версии и откат»."
 echo "Создан релиз $tag"
