@@ -96,11 +96,14 @@ else:
         errors.append(f"метка в имени {zpath.name} не соответствует содержимому (python3 tools/make_trosha_zip.py)")
     if zpath.name not in (ROOT / "README.md").read_text(encoding="utf-8"):
         errors.append(f"в README нет ссылки на {zpath.name} (python3 tools/make_trosha_zip.py)")
+    latest = json.loads((ROOT / "trosha/zip/latest.json").read_text(encoding="utf-8")).get("file")
+    if latest != zpath.name:
+        errors.append(f"trosha/zip/latest.json указывает на {latest}, а архив называется {zpath.name} (python3 tools/make_trosha_zip.py)")
     with zipfile.ZipFile(zpath) as z:
         inside = {i.filename.split("/", 1)[1]: z.read(i) for i in z.infolist()}
     for f in (ROOT / "trosha").rglob("*"):
         rel = f.relative_to(ROOT / "trosha").as_posix()
-        if f.is_file() and f != zpath and inside.get(rel) != f.read_bytes():
+        if f.is_file() and f != zpath and not rel.startswith("zip/") and inside.get(rel) != f.read_bytes():
             errors.append(f"архив {zpath.name} устарел: {rel} (python3 tools/make_trosha_zip.py)")
             break
 

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Скачать «Трошу на экране» — Маленький караван</title>
+<style>
+  :root { --bg: #fff6e4; --ink: #3a1d0b; --accent: #e8721c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); color: var(--ink);
+    font-family: "Rubik", "Segoe UI", Tahoma, Arial, sans-serif; text-align: center; }
+  main { max-width: 34rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 .6rem; }
+  p { font-size: 1.05rem; line-height: 1.5; margin: .5rem 0; }
+  .btn { display: inline-block; margin: 1rem 0 .4rem; padding: .9rem 1.6rem; border-radius: 999px; background: var(--accent); color: #fff; font-size: 1.15rem; font-weight: 700; text-decoration: none; }
+  .btn[aria-disabled="true"] { opacity: .55; pointer-events: none; }
+  small { display: block; margin-top: 1rem; color: #7a5a40; }
+  small a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Троша на экране панели</h1>
+  <p>Архив для флешки: страница, озвучка и инструкция. Скачивание начнётся само; если нет, нажмите кнопку.</p>
+  <a class="btn" id="dl" href="#" aria-disabled="true">Скачать архив</a>
+  <p id="msg">Ищу свежую версию…</p>
+  <small>Адрес этой страницы не меняется, а архив здесь всегда последний.<br>
+    Запасная ссылка: <a href="https://github.com/qwest65/malenkiy-karavan-web/releases/latest/download/Trosha-na-ekrane.zip">GitHub</a></small>
+</main>
+<script>
+// Имя архива меняется при каждой правке (в нём метка содержимого), актуальное лежит в latest.json.
+// Читаем его без кэша, поэтому старая копия из кэша браузера не подставится.
+(async () => {
+  const btn = document.getElementById('dl'), msg = document.getElementById('msg');
+  try {
+    const r = await fetch('latest.json?t=' + Date.now(), { cache: 'no-store' });
+    const { file } = await r.json();
+    const url = new URL('../' + file, location.href).href;
+    btn.href = url; btn.setAttribute('download', file); btn.removeAttribute('aria-disabled');
+    msg.textContent = 'Версия: ' + file.replace(/^Trosha-na-ekrane-/, '').replace(/\.zip$/, '');
+    if (!new URLSearchParams(location.search).has('nostart')) location.href = url;
+  } catch (e) {
+    btn.href = 'https://github.com/qwest65/malenkiy-karavan-web/releases/latest/download/Trosha-na-ekrane.zip'; btn.removeAttribute('aria-disabled');
+    msg.textContent = 'Не удалось узнать свежую версию, кнопка ведёт на запасную ссылку.';
+  }
+})();
+</script>
+</body>
+</html>

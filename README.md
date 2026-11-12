@@ -35,7 +35,7 @@
 |---|---|
 | Сайт проекта | https://маленький-караван.рф/ |
 | Прогулка (сюда ведёт QR-код) | https://маленький-караван.рф/progulka/ |
-| Троша на экране панели (для занятия) | https://маленький-караван.рф/trosha/ ; архив для флешки — https://github.com/qwest65/malenkiy-karavan-web/releases/latest/download/Trosha-na-ekrane.zip (постоянная ссылка, всегда свежий) |
+| Троша на экране панели (для занятия) | https://маленький-караван.рф/trosha/ ; архив для флешки — https://маленький-караван.рф/trosha/zip/ (постоянный адрес, всегда свежий архив) |
 | Политика конфиденциальности | https://маленький-караван.рф/site/privacy.html |
 | Старый домен | malenkiy-karavan.ru → перенаправляет на главную .рф |
 
@@ -222,7 +222,7 @@ npm install --no-save playwright && npx playwright install chromium && node test
 экран** → ещё ∨ — сначала. Всего пять реплик (`trosha/assets/line1…5.mp3`), фото — `trosha/assets/board.webp` (коллаж 1600×900 с
 прозрачным фоном).
 
-Готовый архив для флешки (страница, озвучка и инструкция) скачивается по **постоянной ссылке**: [github.com/qwest65/malenkiy-karavan-web/releases/latest/download/Trosha-na-ekrane.zip](https://github.com/qwest65/malenkiy-karavan-web/releases/latest/download/Trosha-na-ekrane.zip). Она всегда ведёт на архив из последнего релиза (его создаёт GitHub сам после каждого слияния PR, `tools/make_release.sh`), поэтому адрес не меняется и старой копии из кэша не бывает. Запасная ссылка с сайта: [маленький-караван.рф/trosha/Trosha-na-ekrane-1d765321.zip](https://маленький-караван.рф/trosha/Trosha-na-ekrane-1d765321.zip). В имени архива стоит метка содержимого (`-1d765321`): так браузер и прокси не отдают старую копию из кэша. После любой правки в `trosha/` соберите его заново: `python3 tools/make_trosha_zip.py` (проверка перед выкладкой напомнит).
+Готовый архив для флешки (страница, озвучка и инструкция) скачивается по **постоянной ссылке на своём сайте**: [маленький-караван.рф/trosha/zip/](https://маленький-караван.рф/trosha/zip/). Адрес не меняется: страница `trosha/zip/` при каждом открытии без кэша читает `trosha/zip/latest.json` (его пишет `tools/make_trosha_zip.py`) и сама начинает скачивать актуальный архив, поэтому старой копии из кэша не бывает и настраивать сервер не нужно. Запасные ссылки: [релиз на GitHub](https://github.com/qwest65/malenkiy-karavan-web/releases/latest/download/Trosha-na-ekrane.zip) (всегда последний, архив прикладывает `tools/make_release.sh`) и прямая [маленький-караван.рф/trosha/Trosha-na-ekrane-1d765321.zip](https://маленький-караван.рф/trosha/Trosha-na-ekrane-1d765321.zip). В имени архива стоит метка содержимого (`-1d765321`): так браузер и прокси не отдают старую копию из кэша. После любой правки в `trosha/` соберите его заново: `python3 tools/make_trosha_zip.py` (проверка перед выкладкой напомнит).
 
 Голос — «Троша — Маленький караван» из ElevenLabs, 5 реплик в `trosha/assets/line1…5.mp3`. Рот двигается по
 заранее посчитанной огибающей звука (в странице, `MOUTH`), поэтому работает и с флешки. Картинки: тело без

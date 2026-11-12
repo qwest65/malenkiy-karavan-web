@@ -11,6 +11,7 @@
 """
 import hashlib
 import io
+import json
 import pathlib
 import re
 import zipfile
@@ -58,6 +59,11 @@ def add(z, name, data):
     z.writestr(info, data)
 
 
+def is_dl(p):
+    """Страница скачивания trosha/zip/ в архив не входит (в ней лежит имя самого архива)."""
+    return p.relative_to(ROOT).parts[0] == "zip"
+
+
 def build(files):
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:
@@ -68,12 +74,13 @@ def build(files):
 
 
 def main():
-    files = sorted(p for p in ROOT.rglob("*") if p.is_file() and not p.name.startswith(PREFIX))
+    files = sorted(p for p in ROOT.rglob("*") if p.is_file() and not p.name.startswith(PREFIX) and not is_dl(p))
     data = build(files)
     name = f"{PREFIX}-{hashlib.sha256(data).hexdigest()[:8]}.zip"
     for old in ROOT.glob(f"{PREFIX}*.zip"):
         old.unlink()
     (ROOT / name).write_bytes(data)
+    (ROOT / "zip" / "latest.json").write_text(json.dumps({"file": name}, ensure_ascii=False) + "\n", encoding="utf-8")
     md = README_MD.read_text(encoding="utf-8")
     # меняем только ссылки на файл на сайте (…/trosha/Trosha-na-ekrane-<метка>.zip); постоянную ссылку на релиз не трогаем
     md = re.sub(rf"trosha/{PREFIX}(-[0-9a-f]{{8}})?\.zip", f"trosha/{name}", md)
