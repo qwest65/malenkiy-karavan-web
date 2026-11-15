@@ -1,21 +1,3 @@
+# Сайт в черновике: поисковикам закрыт. Перед запуском в data/site.json поставьте "draft": false.
 User-agent: *
-Allow: /
-Disallow: /tests/
-Disallow: /tools/
-# Страница для занятия с интерактивной панелью — не для поиска.
-Disallow: /trosha/
-# Кусочки карты и служебный список файлов — не страницы, искать в них нечего.
-Disallow: /map/tiles/
-Disallow: /.deploy-manifest.json
-
-# Яндекс: ?v=… в ссылках только обновляет карточку в мессенджерах — это та же страница.
-User-agent: Yandex
-Allow: /
-Disallow: /tests/
-Disallow: /tools/
-Disallow: /trosha/
-Disallow: /map/tiles/
-Disallow: /.deploy-manifest.json
-Clean-param: v
-
-Sitemap: https://xn----7sbbaalryjidglrj8b2n.xn--p1ai/sitemap.xml
+Disallow: /

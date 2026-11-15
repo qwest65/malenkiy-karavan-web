@@ -1,28 +1,21 @@
 #!/usr/bin/env bash
-# Создаёт релизы на GitHub (Releases): метку версии, к которой можно откатиться или обновиться.
-# Запускается workflow «Release» после каждого слияния PR в main и создаёт релиз для этого слияния:
-#   v1.30 — если версия приложения (APP_VERSION в progulka/app.js) новая;
-#   v1.30.1, v1.30.2 … — если версия та же, а изменился сайт, страница Троши, тексты и т. п.
-# Нужен GH_TOKEN (в workflow — встроенный). Откат на метку: см. README, раздел «Версии и откат».
-# Прошлые версии задним числом отметить нельзя: GitHub не даёт рабочему процессу (у его токена нет права `workflows`)
-# создавать метки на старых коммитах, где менялись файлы .github/workflows. На новых слияниях это работает.
+# Создаёт релиз на GitHub (Releases) для слияния PR в ветку new-site: метку, к которой можно откатиться.
+# Версия берётся из "version" в data/site.json. Метка:
+#   site-v0.2 — если версия новая;
+#   site-v0.2.1, site-v0.2.2 … — если версия та же, а изменились тексты, картинки, вёрстка.
+# Приставка site-v нужна, потому что в этом репозитории есть релизы основного сайта (v1.29…).
+# Релиз НЕ помечается «последним» (--latest=false): иначе он подменил бы ссылки вида …/releases/latest/…
+# основного сайта. Нужен GH_TOKEN (в workflow — встроенный). Откат на метку: README, раздел «Версии и откат».
 set -euo pipefail
 
 has() { gh release view "$1" >/dev/null 2>&1; }
 
-# релиз для текущего слияния
-APP="$(grep -m1 -oP "APP_VERSION = '\K[^']+" progulka/app.js)"
+VER="$(python3 -c "import json;print(json.load(open('data/site.json',encoding='utf-8'))['version'])")"
 SHA="${GITHUB_SHA:-$(git rev-parse HEAD)}"
-if git tag --points-at "$SHA" | grep -q '^v'; then echo "У этого коммита уже есть метка версии"; exit 0; fi
+if git tag --points-at "$SHA" | grep -q '^site-v'; then echo "У этого коммита уже есть метка версии"; exit 0; fi
 PR="$(git log -1 --format=%b "$SHA" | grep -m1 . || git log -1 --format=%s "$SHA")"
-tag="v$APP"; k=0
-while has "$tag" || git rev-parse -q --verify "refs/tags/$tag" >/dev/null; do k=$((k + 1)); tag="v$APP.$k"; done
-# архив Троши для флешки прикладывается к релизу под одним и тем же именем: так постоянная ссылка
-# https://github.com/<репозиторий>/releases/latest/download/Trosha-na-ekrane.zip всегда ведёт на свежий архив
-ASSETS=()
-if ls trosha/Trosha-na-ekrane-*.zip >/dev/null 2>&1; then
-  tmp="$(mktemp -d)"; cp trosha/Trosha-na-ekrane-*.zip "$tmp/Trosha-na-ekrane.zip"; ASSETS=("$tmp/Trosha-na-ekrane.zip")
-fi
-gh release create "$tag" "${ASSETS[@]}" --target "$SHA" --latest --generate-notes --title "${tag#v} · $PR" \
-  --notes "$PR"$'\n\n'"Архив Троши для флешки: Trosha-na-ekrane.zip (в файлах ниже). Откатить сайт на эту версию: README, раздел «Версии и откат»."
+tag="site-v$VER"; k=0
+while has "$tag" || git rev-parse -q --verify "refs/tags/$tag" >/dev/null; do k=$((k + 1)); tag="site-v$VER.$k"; done
+gh release create "$tag" --target "$SHA" --latest=false --generate-notes --title "${tag#site-v} · $PR" \
+  --notes "$PR"$'\n\n'"Откатить сайт на эту версию: README, раздел «Версии и откат»."
 echo "Создан релиз $tag"

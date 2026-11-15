@@ -2,30 +2,31 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <!-- Основной адрес — маленький-караван.рф: с malenkiy-karavan.ru и www переводим туда же. -->
-  <script>if (/^(www\.)?malenkiy-karavan\.ru$|^www\.xn----7sbbaalryjidglrj8b2n\.xn--p1ai$/.test(location.hostname) && navigator.onLine) location.replace('https://xn----7sbbaalryjidglrj8b2n.xn--p1ai' + location.pathname + location.search + location.hash);</script>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Страница не найдена — Маленький караван</title>
-  <link rel="icon" href="/site/images/icon.png">
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #bfe6f7;
-      font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #3b2415; text-align: center; }
-    main { padding: 24px; max-width: 460px; }
-    img { width: 180px; height: 180px; }
-    h1 { font-size: 26px; margin: 12px 0 8px; }
-    a { display: inline-block; margin: 8px 6px; padding: 12px 22px; border-radius: 999px; background: #ff6a1f;
-      color: #fff; font-weight: 700; text-decoration: none; }
-    a.alt { background: #fff7d6; color: #5a2d14; }
-  </style>
+  <meta name="theme-color" content="#ff6a1f">
+  <title>Страница не найдена — Название сайта</title>
+  <meta name="description" content="Такой страницы нет.">
+  <link rel="canonical" href="https://example.ru/404.html">
+  <meta name="robots" content="noindex, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Название сайта">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:title" content="Страница не найдена — Название сайта">
+  <meta property="og:description" content="Такой страницы нет.">
+  <meta property="og:url" content="https://example.ru/404.html">
+  <meta property="og:image" content="https://example.ru/images/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="images/icon.png">
+  <link rel="stylesheet" href="fonts/rubik.css?v=149d81fa">
+  <link rel="stylesheet" href="assets/style.css?v=393c5e87"><style>:root{--accent:#ff6a1f;--accent-dark:#e2500c;--ink:#3b2415;--muted:#7a6150;--page:#fff9ef;--panel:#ffffff}</style>
 </head>
 <body>
-  <main>
-    <img src="/stickers/trosha.webp" alt="Верблюжонок Троша">
-    <h1>Ой, такой страницы нет</h1>
-    <p>Троша поискал везде, но не нашёл. Может, начнём прогулку?</p>
-    <a href="/progulka/">🐫 Начать прогулку</a>
-    <a class="alt" href="/">О проекте</a>
-  </main>
+<main class="wrap narrow">
+  <div class="panel">
+    <h1>Такой страницы нет</h1>
+    <p>Возможно, ссылка устарела или в ней опечатка.</p>
+    <p><a href="/">← На главную</a></p>
+  </div>
+</main>
 </body>
 </html>

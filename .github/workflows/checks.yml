@@ -1,13 +1,12 @@
 name: Checks
 
-# Проверка перед выкладкой: на каждый pull request в main и на каждый push в main.
-# 1) файлы на месте и данные читаются (tests/check_files.py);
-# 2) прогулка и сайт проекта открываются в настоящем браузере без ошибок (tests/smoke.cjs).
+# Проверка статичного сайта: на каждый pull request в ветку new-site и на каждый push в неё.
+# Браузер не нужен: tests/check_site.py проверяет данные, свежесть собранных страниц, ссылки и теги за секунды.
 on:
   pull_request:
-    branches: ["main"]
+    branches: ["new-site"]
   push:
-    branches: ["main"]
+    branches: ["new-site"]
   workflow_dispatch:
 
 permissions:
@@ -16,21 +15,8 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
-      - name: JavaScript без синтаксических ошибок
-        run: |
-          node --check progulka/app.js
-          node --check progulka/sw.js
-
-      - name: Файлы и данные на месте
-        run: python3 tests/check_files.py
-
-      - name: Браузер для проверки
-        run: |
-          npm install --no-save --no-package-lock playwright@1.48.2
-          npx playwright install --with-deps chromium
-
-      - name: Прогулка и сайт в браузере
-        run: node tests/smoke.cjs
+      - name: Сайт в порядке
+        run: python3 tests/check_site.py
